@@ -40,17 +40,14 @@
   .fatal-link{color:var(--cyan);font-size:12px;}
 
   /* Nav */
-  nav{position:sticky;top:0;z-index:100;background:rgba(8,12,16,0.96);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px;backdrop-filter:blur(8px);}
+  nav{position:sticky;top:0;z-index:100;background:rgba(8,12,16,0.96);border-bottom:1px solid var(--border);padding:0 2rem;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:58px;backdrop-filter:blur(8px);}
   .nav-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:3px;color:var(--cyan);white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis;}
   .nav-logo em{color:var(--gold);font-style:normal;}
-  .nav-links{display:flex;gap:1.75rem;}
+  .nav-links{display:flex;gap:1.75rem;justify-content:center;}
   .nav-links a{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);text-decoration:none;cursor:pointer;transition:color 0.2s;padding-bottom:3px;border-bottom:1px solid transparent;}
   .nav-links a:hover,.nav-links a.active{color:var(--cyan);border-bottom-color:var(--cyan);}
   .nav-status{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--green);letter-spacing:1px;}
   .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
-  .dot.offline{background:var(--red);}
-  .dot.degraded{background:var(--gold);}
-  .dot.checking{background:var(--text-dim);}
 
   /* Page system */
   nav{flex-shrink:0;}
@@ -135,7 +132,20 @@
   .filter-count{font-size:11px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap;margin-left:auto;}
 
 
-  @keyframes svRing{0%{transform:scale(1);opacity:0.4;}70%{transform:scale(2.2);opacity:0;}100%{transform:scale(2.2);opacity:0;}}
+  .website-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;}
+  .website-card{display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg-card);border:1px solid var(--border);padding:1.75rem 1.25rem 1.5rem;text-decoration:none;transition:border-color 0.2s,background 0.2s;cursor:pointer;position:relative;}
+  .website-card::before,.website-card::after{content:'';position:absolute;width:12px;height:12px;border-color:var(--gold-dim);border-style:solid;opacity:0.35;}
+  .website-card::before{top:6px;left:6px;border-width:1px 0 0 1px;}
+  .website-card::after{bottom:6px;right:6px;border-width:0 1px 1px 0;}
+  .website-card:hover{border-color:rgba(77,217,245,0.4);background:rgba(77,217,245,0.03);}
+  .website-card:hover .website-arrow{color:var(--cyan);}
+  .website-icon{width:72px;height:72px;border-radius:6px;background:var(--bg-panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:24px;margin-bottom:1rem;overflow:hidden;}
+  .website-icon img{width:100%;height:100%;object-fit:cover;}
+  .website-info{flex:1;width:100%;}
+  .website-name{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#e8f4ff;margin-bottom:6px;}
+  .website-desc{font-size:11px;color:var(--text-dim);line-height:1.6;margin-bottom:8px;}
+  .website-url{font-size:9px;letter-spacing:1px;color:var(--cyan-dim);}
+  .website-arrow{font-size:14px;color:var(--border);transition:color 0.2s;margin-top:0.75rem;}
   /* Spinner */
   .spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.8s linear infinite;margin:2rem auto;}
 
@@ -188,13 +198,18 @@
     <a class="active" onclick="showPage('home',this)">首页</a>
     <a onclick="showPage('org',this)">组织</a>
     <a onclick="showPage('members',this)">成员</a>
+    <a onclick="showPage('websites',this)">网站</a>
     <a onclick="showPage('join',this)">加入</a>
-    <a onclick="showPage('status',this)">状态</a>
   </div>
-  <div class="nav-status" id="navStatus" style="gap:10px;cursor:default;">
+  <div class="nav-status" id="navStatus" style="gap:12px;cursor:default;justify-content:flex-end;">
     <div style="display:flex;align-items:center;gap:6px;">
       <div class="dot" id="serverDot"></div>
       <span id="serverTxt" style="font-size:10px;letter-spacing:1px;">检测中...</span>
+    </div>
+    <div style="width:1px;height:12px;background:var(--border);"></div>
+    <div style="display:flex;align-items:center;gap:5px;">
+      <span style="font-size:9px;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;">版本</span>
+      <span id="navVersion" style="font-family:'Orbitron',monospace;font-size:10px;color:var(--gold);letter-spacing:1px;">—</span>
     </div>
   </div>
 </nav>
@@ -212,7 +227,7 @@
     <div class="hero-btns" style="flex-direction:column;align-items:center;gap:0.75rem;">
       <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
         <a class="btn btn-primary" id="rsiBtn" href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank">RSI 官方页面</a>
-        <a class="btn btn-primary" onclick="showPage('join',document.querySelectorAll('.nav-links a')[3])">加入申请</a>
+        <a class="btn btn-primary" onclick="showPage('join',document.querySelectorAll('.nav-links a')[4])">加入申请</a>
       </div>
 
     </div>
@@ -277,6 +292,79 @@
 </div>
 
 <!-- JOIN -->
+<!-- WEBSITES -->
+<div class="page" id="websites">
+  <div class="section">
+    <div class="sec-hd"><div class="sec-line"></div><div class="sec-title">相关网站</div><div class="sec-line"></div></div>
+    <div class="website-grid">
+
+      <a class="website-card" href="https://www.erkul.games/live/calculator" target="_blank">
+        <div class="website-icon"><img src="https://www.erkul.games/favicon.ico" onerror="this.outerHTML='🎯'"></div>
+        <div class="website-info">
+          <div class="website-name">Erkul DPS Calculator</div>
+          <div class="website-desc">武器 DPS 查询工具，直观对比各武器伤害输出数据</div>
+          <div class="website-url">erkul.games</div>
+        </div>
+        <div class="website-arrow">→</div>
+      </a>
+
+      <a class="website-card" href="https://www.spviewer.eu/" target="_blank">
+        <div class="website-icon"><img src="https://www.spviewer.eu/favicon.ico" onerror="this.outerHTML='🔍'"></div>
+        <div class="website-info">
+          <div class="website-name">SPViewer</div>
+          <div class="website-desc">数据更详细的装备查询工具，信息全面但访问较慢</div>
+          <div class="website-url">spviewer.eu</div>
+        </div>
+        <div class="website-arrow">→</div>
+      </a>
+
+      <a class="website-card" href="https://scmdb.net/" target="_blank">
+        <div class="website-icon"><img src="https://scmdb.net/favicon.ico" onerror="this.outerHTML='📋'"></div>
+        <div class="website-info">
+          <div class="website-name">SCMDB</div>
+          <div class="website-desc">第三方任务蓝图数据库，任务信息查询（英文）</div>
+          <div class="website-url">scmdb.net</div>
+        </div>
+        <div class="website-arrow">→</div>
+      </a>
+
+      <a class="website-card" href="https://www.spviewer.eu/" target="_blank">
+        <div class="website-icon"><img src="https://www.spviewer.eu/favicon.ico" onerror="this.outerHTML='🔍'"></div>
+        <div class="website-info">
+          <div class="website-name">SPViewer</div>
+          <div class="website-desc">数据更详细的装备查询工具，信息全面但访问较慢</div>
+          <div class="website-url">spviewer.eu</div>
+        </div>
+        <div class="website-arrow">→</div>
+      </a>
+
+      <a class="website-card" href="https://crafter.infinityfreeapp.com/" target="_blank">
+        <div class="website-icon"><img src="https://crafter.infinityfreeapp.com/favicon.ico" onerror="this.outerHTML='🔧'"></div>
+        <div class="website-info">
+          <div class="website-name">SC Crafter</div>
+          <div class="website-desc">蓝图查询工具，对比不同材料的制造差异与效益</div>
+          <div class="website-url">crafter.infinityfreeapp.com</div>
+        </div>
+        <div class="website-arrow">→</div>
+      </a>
+
+      <a class="website-card" href="#" target="_blank">
+        <div class="website-icon"></div>
+        <div class="website-info">
+          <div class="website-name">网站名称</div>
+          <div class="website-desc">网站简介描述</div>
+          <div class="website-url">example.com</div>
+        </div>
+        <div class="website-arrow">→</div>
+      </a>
+
+    </div>
+  </div>
+  </div>
+</div>
+
+
+<!-- JOIN -->
 <div class="page" id="join">
   <div class="section">
     <div class="sec-hd"><div class="sec-line"></div><div class="sec-title">申请加入</div><div class="sec-line"></div></div>
@@ -291,34 +379,6 @@
         <a class="btn btn-ghost" href="https://qm.qq.com/q/8wCNiHactG" target="_blank">加入 QQ 群</a>
       </div>
     </div>
-  </div>
-</div>
-
-
-<!-- STATUS -->
-<div class="page" id="status">
-  <div class="section">
-    <div class="sec-hd"><div class="sec-line"></div><div class="sec-title">游戏状态</div><div class="sec-line"></div></div>
-
-    <!-- Stats cards -->
-    <div class="info-grid" id="statusGrid" style="margin-bottom:2rem;">
-      <div class="info-card"><div class="info-lbl">当前 LIVE 版本</div><div class="info-val cyan" id="stCurrentLive">—</div></div>
-      <div class="info-card">
-        <div class="info-lbl">服务器状态</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
-          <div style="position:relative;width:14px;height:14px;flex-shrink:0;">
-            <div id="svPulseRing" style="position:absolute;inset:0;border-radius:50%;background:var(--text-dim);opacity:0.3;animation:svRing 2s infinite;"></div>
-            <div id="svDot" style="position:absolute;inset:2px;border-radius:50%;background:var(--text-dim);"></div>
-          </div>
-          <span id="svTxt" style="font-size:14px;font-weight:600;color:var(--text-dim);">检测中...</span>
-        </div>
-      </div>
-      <div class="info-card"><div class="info-lbl">总注册账号</div><div class="info-val" id="stFans">—</div></div>
-      <div class="info-card"><div class="info-lbl">总众筹金额</div><div class="info-val gold" id="stFunds">—</div></div>
-    </div>
-
-
-
   </div>
 </div>
 
@@ -367,7 +427,7 @@ function showPage(id,el){
   if(el)el.classList.add('active');
   window.scrollTo(0,0);
   if(id==='members' && !memberCache['all']) loadMembers(1);
-  if(id==='status') fetchStatus();
+
 }
 
 async function apiGet(endpoint){
@@ -386,7 +446,7 @@ function renderOrg(d){
   // Nav & footer
   document.getElementById('navLogo').textContent = ''; const em = document.createElement('em'); em.textContent = name; document.getElementById('navLogo').appendChild(em);
   document.getElementById('footerName').textContent = name + ' · RSI ORG';
-  document.getElementById('serverTxt').textContent = '数据已同步';
+
 
   // Hero logo
   const lw = document.getElementById('heroLogo');
@@ -669,75 +729,38 @@ function goPage(p){
   document.getElementById('members').scrollIntoView({behavior:'smooth'});
 }
 
-async function fetchServerStatus(){
-  const dot = document.getElementById('serverDot');
-  const txt = document.getElementById('serverTxt');
-  const nav = document.getElementById('navStatus');
+
+
+async function fetchNavStatus(){
+  const dot  = document.getElementById('serverDot');
+  const txt  = document.getElementById('serverTxt');
+  const ver  = document.getElementById('navVersion');
+  const nav  = document.getElementById('navStatus');
   try{
+    // Fetch stats for version
+    const sr = await fetch(`${BASE}/stats`);
+    const sd = (await sr.json())?.data;
+    if(sd?.current_live) ver.textContent = sd.current_live;
+
+    // Ping org API to check server reachability
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
-    const r = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/cache/organization/${ORG_SID}`, { signal: controller.signal });
+    const timer = setTimeout(()=>controller.abort(), 8000);
+    const pr = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/cache/organization/${ORG_SID}`,{signal:controller.signal});
     clearTimeout(timer);
-    const d = await r.json();
-    if(d?.success){
-      dot.className='dot'; txt.textContent='服务器正常'; nav.style.color='var(--green)';
+    const pd = await pr.json();
+    if(pd?.success){
+      dot.style.background='var(--green)';
+      txt.textContent='服务器正常';
+      nav.style.color='var(--green)';
     } else {
-      dot.className='dot degraded'; txt.textContent='状态异常'; nav.style.color='var(--gold)';
+      dot.style.background='var(--gold)';
+      txt.textContent='状态异常';
+      nav.style.color='var(--gold)';
     }
   } catch(e){
-    dot.className='dot offline';
-    txt.textContent = e.name==='AbortError' ? '连接超时' : '服务器离线';
+    dot.style.background='var(--red)';
+    txt.textContent= e.name==='AbortError'?'连接超时':'服务器错误';
     nav.style.color='var(--red)';
-  }
-}
-
-async function fetchStatus(){
-  try{
-    const statsRes = await fetch(`${BASE}/stats`);
-    const stats = (await statsRes.json())?.data;
-
-    if(stats){
-      document.getElementById('stCurrentLive').textContent = stats.current_live || '—';
-      document.getElementById('stFans').textContent = stats.fans ? Number(stats.fans).toLocaleString() + ' 人' : '—';
-      const funds = stats.funds ? '$' + (stats.funds / 100).toLocaleString('en-US', {maximumFractionDigits:0}) : '—';
-      document.getElementById('stFunds').textContent = funds;
-    }
-
-    // Server status ping
-    try{
-      const controller = new AbortController();
-      const timer = setTimeout(()=>controller.abort(), 8000);
-      const sr = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/cache/organization/${ORG_SID}`,{signal:controller.signal});
-      clearTimeout(timer);
-      const sd = await sr.json();
-      const dot = document.getElementById('svDot');
-      const ring = document.getElementById('svPulseRing');
-      const txt = document.getElementById('svTxt');
-      if(sd?.success){
-        dot.style.background = 'var(--green)';
-        ring.style.background = 'var(--green)';
-        txt.style.color = 'var(--green)';
-        txt.textContent = '运行正常';
-      } else {
-        dot.style.background = 'var(--gold)';
-        ring.style.background = 'var(--gold)';
-        txt.style.color = 'var(--gold)';
-        txt.textContent = '状态异常';
-      }
-    } catch(e){
-      const dot = document.getElementById('svDot');
-      const ring = document.getElementById('svPulseRing');
-      const txt = document.getElementById('svTxt');
-      dot.style.background = 'var(--red)';
-      ring.style.background = 'var(--red)';
-      txt.style.color = 'var(--red)';
-      txt.textContent = e.name==='AbortError'?'连接超时':'无法连接';
-    }
-
-    document.getElementById('statusUpdated').textContent =
-      '数据更新于：' + new Date().toLocaleString('zh-CN');
-  } catch(e){
-    console.error('fetchStatus error:', e);
   }
 }
 
@@ -752,8 +775,8 @@ async function init(){
     ls.classList.add('out');
     setTimeout(()=>ls.style.display='none', 500);
     loadMembers(1);
-    fetchServerStatus();
-    setInterval(fetchServerStatus, 3 * 60 * 1000);
+    fetchNavStatus();
+    setInterval(fetchNavStatus, 3 * 60 * 1000);
   } catch(e){
     document.getElementById('loadScreen').style.display='none';
     const fs = document.getElementById('fatalScreen');
