@@ -388,7 +388,7 @@ function renderOrg(d){
     {l:'参与程度', v:COMMITMENT[d.commitment]||d.commitment||'-', c:'gold'},
     {l:'语言', v:LANG[d.lang]||d.lang||'-'},
     {l:'成员数', v:(d.members??'-')+'人', c:'cyan'},
-    {l:'招募状态', v:d.recruiting?'开放中':'已关闭', c:d.recruiting?'green':'red'},
+    {l:'招募状态', v:'开放中', c:'green'},
     {l:'角色扮演', v:d.roleplay?'是':'否'},
   ];
   const FOCUS = { 'Exploration':'探索', 'Freelancing':'自由佣兵', 'Trading':'贸易', 'Mining':'采矿', 'Bounty Hunting':'赏金猎人', 'Bounty_Hunting':'赏金猎人', 'Piracy':'海盗', 'Carebearing':'互助', 'Engineering':'工程', 'Resources':'资源', 'Transport':'运输', 'Scouting':'侦察', 'Medical':'医疗', 'Fuel':'燃料', 'Repair':'维修', 'Manufacturing':'制造', 'Research':'研究', 'Security':'安保', 'Military':'军事', 'Social':'社交', 'Roleplay':'角色扮演', 'Streaming':'直播', 'Recruiting':'招募' };
