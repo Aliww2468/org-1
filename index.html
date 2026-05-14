@@ -168,6 +168,26 @@
   .announce-label{display:inline-block;font-size:9px;letter-spacing:1px;padding:2px 7px;border:1px solid var(--border-gold);color:var(--gold-dim);text-transform:uppercase;margin-bottom:0.5rem;}
   .announce-empty{font-size:12px;color:var(--text-dim);text-align:center;padding:1rem;border:1px dashed var(--border);}
   .announce-spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.8s linear infinite;margin:1rem auto;}
+
+  /* Hamburger menu */
+  .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;z-index:200;}
+  .hamburger span{display:block;width:22px;height:2px;background:var(--text);transition:all 0.3s ease;}
+  .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .hamburger.open span:nth-child(2){opacity:0;}
+  .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+  .mobile-menu{display:none;position:fixed;inset:0;z-index:150;background:rgba(8,12,16,0.98);flex-direction:column;align-items:center;justify-content:center;gap:2rem;backdrop-filter:blur(12px);}
+  .mobile-menu.open{display:flex;}
+  .mobile-menu a{font-family:'Orbitron',monospace;font-size:16px;letter-spacing:4px;text-transform:uppercase;color:var(--text-dim);text-decoration:none;cursor:pointer;transition:color 0.2s;padding:0.5rem 0;border-bottom:1px solid transparent;}
+  .mobile-menu a:hover,.mobile-menu a.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+  .mobile-menu-status{display:flex;align-items:center;gap:8px;margin-top:1rem;padding-top:1.5rem;border-top:1px solid var(--border);}
+
+  @media(max-width:768px){
+    nav{grid-template-columns:1fr auto;padding:0 1.25rem;}
+    .nav-links{display:none;}
+    .nav-status{display:none;}
+    .hamburger{display:flex;}
+  }
   /* Spinner */
   .spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.8s linear infinite;margin:2rem auto;}
 
@@ -223,7 +243,8 @@
     <a onclick="showPage('websites',this)">网站</a>
     <a onclick="showPage('join',this)">加入</a>
   </div>
-  <div class="nav-status" id="navStatus" style="gap:12px;cursor:default;justify-content:flex-end;">
+  <div style="display:flex;align-items:center;gap:1rem;justify-content:flex-end;">
+    <div class="nav-status" id="navStatus" style="gap:12px;cursor:default;justify-content:flex-end;">
     <div style="display:flex;align-items:center;gap:6px;">
       <div class="dot" id="serverDot"></div>
       <span id="serverTxt" style="font-size:10px;letter-spacing:1px;">检测中...</span>
@@ -234,7 +255,27 @@
       <span id="navVersion" style="font-family:'Orbitron',monospace;font-size:10px;color:var(--gold);letter-spacing:1px;">—</span>
     </div>
   </div>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
 </nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a onclick="showPage('home',this);closeMenu()">首页</a>
+  <a onclick="showPage('org',this);closeMenu()">组织</a>
+  <a onclick="showPage('members',this);closeMenu()">成员</a>
+  <a onclick="showPage('websites',this);closeMenu()">网站</a>
+  <a onclick="showPage('join',this);closeMenu()">加入</a>
+  <div class="mobile-menu-status">
+    <div class="dot" id="mobileDot" style="width:8px;height:8px;"></div>
+    <span id="mobileTxt" style="font-size:11px;letter-spacing:2px;color:var(--text-dim);">—</span>
+    <span style="margin:0 8px;color:var(--border);">|</span>
+    <span style="font-size:10px;color:var(--text-dim);letter-spacing:1px;">版本</span>
+    <span id="mobileVersion" style="font-family:'Orbitron',monospace;font-size:11px;color:var(--gold);margin-left:4px;">—</span>
+  </div>
+</div>
 
 <!-- HOME -->
 <div class="page active" id="home">
@@ -804,7 +845,10 @@ async function fetchNavStatus(){
     // Fetch stats for version — use cache mode for reliability
     const sr = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/cache/stats`);
     const sd = (await sr.json())?.data;
-    ver.textContent = '4.8.0 LIVE';
+    if(sd?.current_live){
+      ver.textContent = sd.current_live;
+      document.getElementById('mobileVersion').textContent = sd.current_live;
+    }
 
     // Ping org API to check server reachability
     const controller = new AbortController();
@@ -816,10 +860,16 @@ async function fetchNavStatus(){
       dot.style.background='var(--green)';
       txt.textContent='服务器正常';
       nav.style.color='var(--green)';
+      document.getElementById('mobileDot').style.background='var(--green)';
+      document.getElementById('mobileTxt').textContent='服务器正常';
+      document.getElementById('mobileTxt').style.color='var(--green)';
     } else {
       dot.style.background='var(--gold)';
       txt.textContent='状态异常';
       nav.style.color='var(--gold)';
+      document.getElementById('mobileDot').style.background='var(--gold)';
+      document.getElementById('mobileTxt').textContent='状态异常';
+      document.getElementById('mobileTxt').style.color='var(--gold)';
     }
   } catch(e){
     dot.style.background='var(--red)';
@@ -878,6 +928,26 @@ function toggleAnnounce(card){
     body.classList.add('expanded');
     body.textContent = decodeURIComponent(body.dataset.full) || '暂无内容';
   }
+}
+
+
+function toggleMenu(){
+  const hb = document.getElementById('hamburger');
+  const mm = document.getElementById('mobileMenu');
+  hb.classList.toggle('open');
+  mm.classList.toggle('open');
+  document.body.style.overflow = mm.classList.contains('open') ? 'hidden' : '';
+}
+
+function closeMenu(){
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('mobileMenu').classList.remove('open');
+  document.body.style.overflow = '';
+  // Sync active state in mobile menu
+  const pages = ['home','org','members','websites','join'];
+  document.querySelectorAll('.mobile-menu a').forEach((a,i)=>{
+    a.classList.toggle('active', document.getElementById(pages[i])?.classList.contains('active'));
+  });
 }
 
 async function init(){
