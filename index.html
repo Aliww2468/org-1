@@ -262,7 +262,7 @@
 </nav>
 
 <!-- Mobile Menu -->
-<div class="mobile-menu" id="mobileMenu">
+<div class="mobile-menu" id="mobileMenu" onclick="handleMenuClick(event)">
   <a onclick="showPage('home',this);closeMenu()">首页</a>
   <a onclick="showPage('org',this);closeMenu()">组织</a>
   <a onclick="showPage('members',this);closeMenu()">成员</a>
@@ -931,12 +931,19 @@ function toggleAnnounce(card){
 }
 
 
+function handleMenuClick(e){
+  // Close if clicking the backdrop (not on a link or status area)
+  if(e.target === document.getElementById('mobileMenu')){
+    closeMenu();
+  }
+}
+
 function toggleMenu(){
   const hb = document.getElementById('hamburger');
   const mm = document.getElementById('mobileMenu');
   hb.classList.toggle('open');
   mm.classList.toggle('open');
-  document.body.style.overflow = mm.classList.contains('open') ? 'hidden' : '';
+  // Don't touch body overflow — it breaks fixed stars background
 }
 
 function closeMenu(){
