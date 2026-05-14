@@ -241,7 +241,7 @@
       </select>
       <select class="filter-select" id="sortBy" onchange="applyFilter()">
         <option value="">默认排序</option>
-        <option value="stars-desc">星级 高→低</option>
+        <option value="stars-desc" selected>星级 高→低</option>
         <option value="stars-asc">星级 低→高</option>
         <option value="name-asc">ID A→Z</option>
         <option value="name-desc">ID Z→A</option>
@@ -251,6 +251,7 @@
     <div id="memberContent"><div class="spinner"></div></div>
     <div class="pagi" id="pagi"></div>
     <div class="pg-info" id="pgInfo"></div>
+    <div class="pg-info" id="cacheHint" style="margin-top:0.4rem;"></div>
   </div>
 </div>
 
@@ -394,44 +395,125 @@ function renderOrg(d){
     : `<div class="recruit-badge recruit-closed">招募状态：已关闭</div>`;
 }
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function fetchPageWithRetry(p, retries = 6){
+  // Try live first, fall back to auto mode on failure
+  const modes = ['live', 'auto', 'cache'];
+  for(let i = 0; i < retries; i++){
+    const mode = modes[Math.min(i, modes.length - 1)];
+    try{
+      const r = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/${mode}/organization_members/${ORG_SID}?page=${p}`);
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      const json = await r.json();
+      const batch = Array.isArray(json.data) ? json.data : [];
+      return batch;
+    } catch(e){
+      const wait = 2000 * (i + 1);
+      console.warn(`第${p}页第${i+1}次失败(${mode})，${wait}ms后重试:`, e.message);
+      if(i < retries - 1) await sleep(wait);
+    }
+  }
+  console.error(`第${p}页彻底失败，跳过`);
+  return [];
+}
+
+const CACHE_KEY = `sc_members_${ORG_SID}`;
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24小时
+
+function saveToLocal(members){
+  try{
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      ts: Date.now(),
+      members
+    }));
+  } catch(e){ console.warn('localStorage 写入失败:', e); }
+}
+
+function loadFromLocal(){
+  try{
+    const raw = localStorage.getItem(CACHE_KEY);
+    if(!raw) return null;
+    const { ts, members } = JSON.parse(raw);
+    const age = Date.now() - ts;
+    if(age > CACHE_TTL) return null; // 过期
+    return { members, age };
+  } catch(e){ return null; }
+}
+
+function clearLocalCache(){
+  localStorage.removeItem(CACHE_KEY);
+  memberCache = {};
+  loadMembers(1);
+}
+
+function formatAge(ms){
+  const m = Math.floor(ms / 60000);
+  if(m < 60) return `${m} 分钟前`;
+  const h = Math.floor(m / 60);
+  return `${h} 小时前`;
+}
+
 async function loadMembers(page){
   if(memberCache['all']){ renderMembers(memberCache['all']); return; }
+
+  // Try localStorage first
+  const cached = loadFromLocal();
+  if(cached){
+    memberCache['all'] = cached.members;
+    renderMembers(cached.members);
+    document.getElementById('cacheHint').innerHTML =
+      `<span style="color:var(--text-dim);font-size:10px;letter-spacing:1px">缓存于 ${formatAge(cached.age)}</span>
+       <button class="pg-btn" style="margin-left:8px;font-size:9px;padding:3px 8px" onclick="clearLocalCache()">🔄 刷新</button>`;
+    return;
+  }
+
   document.getElementById('memberContent').innerHTML='<div class="spinner"></div>';
   document.getElementById('filterCount').textContent = '加载中...';
   try{
-    // Calculate total pages from known member count in org data
     const totalMembers = orgTotalMembers;
     const totalPages = totalMembers > 0 ? Math.ceil(totalMembers / 32) : 15;
 
     let all = [];
     for(let p = 1; p <= totalPages; p++){
-      document.getElementById('filterCount').textContent = `已加载 ${all.length} / ${totalMembers} 人...`;
-      const r = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/live/organization_members/${ORG_SID}?page=${p}`);
-      const json = await r.json();
-      const batch = Array.isArray(json.data) ? json.data : [];
-      if(batch.length === 0) break;
+      document.getElementById('filterCount').textContent =
+        `已加载 ${all.length} / ${totalMembers} 人... (${p}/${totalPages} 页)`;
+      const batch = await fetchPageWithRetry(p);
+      // 不以 batch 长度判断终止，跑完所有按总人数算出的页数
       all = all.concat(batch);
+      if(p < totalPages) await sleep(1500); // 最后一页不用等
+    }
+    // Pad with placeholder cards for private/hidden members
+    const hidden = orgTotalMembers - all.length;
+    if(hidden > 0){
+      for(let i = 0; i < hidden; i++){
+        all.push({ handle: '私密账号', display: '私密账号', image: '', rank: '—', stars: 0, roles: [], private: true });
+      }
     }
     memberCache['all'] = all;
+    saveToLocal(all);
+    document.getElementById('sMembers').textContent = orgTotalMembers;
     renderMembers(all);
   } catch(e){
     document.getElementById('memberContent').innerHTML=
-      `<div style="color:var(--red);font-size:13px;padding:1rem;">成员数据加载失败：${e.message}</div>`;
+      `<div style="color:var(--red);font-size:13px;padding:1rem;">
+        成员数据加载失败：${e.message}
+        <button class="pg-btn" style="margin-left:1rem;margin-top:0.5rem" onclick="clearLocalCache()">🔄 重试</button>
+      </div>`;
   }
 }
 
+const PAGE_SIZE = 32;
+let viewPage = 1;
+
 function renderMembers(members){
-  // Collect all unique ranks for the dropdown
   const ranks = [...new Set(members.map(m=>m.rank).filter(Boolean))];
   const rankSel = document.getElementById('filterRank');
   const curRank = rankSel.value;
   rankSel.innerHTML = '<option value="">全部职衔</option>' +
     ranks.map(r=>`<option value="${r}"${r===curRank?'selected':''}>${r}</option>`).join('');
-
+  viewPage = 1;
   applyFilter();
-  // Hide pagination — all members loaded
-  document.getElementById('pagi').innerHTML='';
-  document.getElementById('pgInfo').textContent='';
 }
 
 function applyFilter(){
@@ -452,54 +534,80 @@ function applyFilter(){
     return true;
   });
 
-  if(sort === 'stars-desc') filtered.sort((a,b)=>(b.stars||0)-(a.stars||0));
+  if(!sort || sort === 'stars-desc') filtered.sort((a,b)=>(b.stars||0)-(a.stars||0));
   else if(sort === 'stars-asc') filtered.sort((a,b)=>(a.stars||0)-(b.stars||0));
   else if(sort === 'name-asc') filtered.sort((a,b)=>(a.handle||'').localeCompare(b.handle||''));
   else if(sort === 'name-desc') filtered.sort((a,b)=>(b.handle||'').localeCompare(a.handle||''));
 
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if(viewPage > totalPages) viewPage = totalPages;
+
+  const start = (viewPage - 1) * PAGE_SIZE;
+  const slice = filtered.slice(start, start + PAGE_SIZE);
+
   document.getElementById('filterCount').textContent =
-    filtered.length + ' / ' + allCached.length + ' 名成员';
+    `${total} / ${allCached.length} 名成员`;
 
   const el = document.getElementById('memberContent');
-  if(!filtered.length){
+  if(!slice.length){
     el.innerHTML='<div style="color:var(--text-dim);font-size:13px;padding:1rem;">没有符合条件的成员</div>';
     document.getElementById('pagi').innerHTML='';
     document.getElementById('pgInfo').textContent='';
     return;
   }
 
-  el.innerHTML=`<div class="member-grid">${filtered.map(m=>{
+  el.innerHTML=`<div class="member-grid">${slice.map(m=>{
     const init=(m.display||m.handle||'?').charAt(0).toUpperCase();
     const av=m.image
       ?`<img class="m-avatar" src="${m.image}" onerror="this.outerHTML='<div class=m-avatar-ph>${init}</div>'">`
       :`<div class="m-avatar-ph">${init}</div>`;
-    const stars=Array.from({length:5},(_,i)=>`<div class="m-star${i<(m.stars||0)?'':' dim'}"></div>`).join('');
+    const starsHtml=Array.from({length:5},(_,i)=>`<div class="m-star${i<(m.stars||0)?'':' dim'}"></div>`).join('');
     const roles=(m.roles||[]).map(r=>`<span class="m-role">${r}</span>`).join('');
+    if(m.private){
+      return `<div class="member-card" style="opacity:0.35;border-style:dashed">
+        <div class="m-avatar-ph" style="color:var(--text-dim)">?</div>
+        <div class="m-handle" style="color:var(--text-dim)">私密账号</div>
+        <div class="m-rank">—</div>
+      </div>`;
+    }
     return `<div class="member-card">${av}
       <div class="m-handle">${m.handle||'Unknown'}</div>
       <div class="m-rank">${m.rank||'Member'}</div>
-      <div class="m-stars">${stars}</div>
+      <div class="m-stars">${starsHtml}</div>
       ${roles?`<div class="m-roles">${roles}</div>`:''}
     </div>`;
   }).join('')}</div>`;
+
+  buildPagi(viewPage, totalPages);
+  document.getElementById('pgInfo').textContent =
+    `第 ${viewPage} / ${totalPages} 页 · ${start+1}–${Math.min(start+PAGE_SIZE,total)} / ${total} 人`;
 }
 
-function buildPagi(page, hasNext){
-  // Hide pagination when filter/search is active
-  const search = document.getElementById('filterSearch')?.value.trim();
-  const rank   = document.getElementById('filterRank')?.value;
-  const stars  = document.getElementById('filterStars')?.value;
-  const isFiltering = search || rank || (stars !== '' && stars !== null && stars !== undefined);
-  if(isFiltering){
+function buildPagi(page, totalPages){
+  if(totalPages <= 1){
     document.getElementById('pagi').innerHTML='';
-    document.getElementById('pgInfo').textContent='';
     return;
   }
+  const range = 2;
+  let btns = '';
+  for(let i = 1; i <= totalPages; i++){
+    if(i === 1 || i === totalPages || (i >= page-range && i <= page+range)){
+      btns += `<button class="pg-btn${i===page?' active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if(i === page-range-1 || i === page+range+1){
+      btns += `<span class="pg-btn" style="pointer-events:none;border:none;color:var(--text-dim)">…</span>`;
+    }
+  }
   document.getElementById('pagi').innerHTML=`
-    <button class="pg-btn" onclick="loadMembers(${page-1})" ${page<=1?'disabled':''}>◀ 上一页</button>
-    <span class="pg-btn active" style="pointer-events:none">${page}</span>
-    <button class="pg-btn" onclick="loadMembers(${page+1})" ${!hasNext?'disabled':''}>下一页 ▶</button>`;
-  document.getElementById('pgInfo').textContent=`第 ${page} 页 · ${Object.values(memberCache)[curPage-1]?.length||0} 名成员`;
+    <button class="pg-btn" onclick="goPage(${page-1})" ${page<=1?'disabled':''}>◀</button>
+    ${btns}
+    <button class="pg-btn" onclick="goPage(${page+1})" ${page>=totalPages?'disabled':''}>▶</button>`;
+}
+
+function goPage(p){
+  viewPage = p;
+  applyFilter();
+  document.getElementById('members').scrollIntoView({behavior:'smooth'});
 }
 
 async function init(){
