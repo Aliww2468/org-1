@@ -16,15 +16,14 @@
   }
   body{font-family:'Rajdhani',sans-serif;background:var(--bg-dark);color:var(--text);min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;}
 
-  /* Stars */
-  .stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;flex-shrink:0;}
-  .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--dur) infinite alternate;will-change:opacity;}
-  @keyframes twinkle{from{opacity:0.1;}to{opacity:var(--op);}}
+
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
   @keyframes fadein{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
   @keyframes mainFadeIn{from{opacity:0;}to{opacity:1;}}
   .main-fade{animation:mainFadeIn 0.8s ease forwards;}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:none;}}
+  .fade-in{opacity:0;animation:fadeInUp 0.8s ease forwards;width:100%;text-align:center;}
   @keyframes scanline{0%{top:-10%;}100%{top:110%;}}
 
   /* Loading */
@@ -215,8 +214,8 @@
 </style>
 </head>
 <body>
+<canvas id="bgCanvas" style="position:fixed;inset:0;z-index:0;pointer-events:none;"></canvas>
 
-<div class="stars" id="stars"></div>
 
 <!-- Loading -->
 <div class="loading-screen" id="loadScreen">
@@ -505,13 +504,6 @@ function decode(str){
 }
 
 // Stars
-const s = document.getElementById('stars');
-for(let i=0;i<110;i++){
-  const el=document.createElement('div');el.className='star';
-  const sz=Math.random()*2+0.5,op=(Math.random()*0.6+0.2).toFixed(2),dur=(Math.random()*4+2).toFixed(1)+'s';
-  el.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${dur};--op:${op};animation-delay:${(Math.random()*4).toFixed(1)}s`;
-  s.appendChild(el);
-}
 
 function showPage(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -943,7 +935,6 @@ function toggleMenu(){
   const mm = document.getElementById('mobileMenu');
   hb.classList.toggle('open');
   mm.classList.toggle('open');
-  // Don't touch body overflow — it breaks fixed stars background
 }
 
 function closeMenu(){
@@ -972,7 +963,7 @@ async function init(){
       document.querySelectorAll('nav, .page, footer').forEach(el=>{
         el.style.opacity='0';
         el.style.transition='opacity 0.8s ease';
-        requestAnimationFrame(()=>{ el.style.opacity='1'; });
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.opacity='1'; }));
       });
     }, 300);
     loadMembers(1);
@@ -992,6 +983,86 @@ async function init(){
 }
 
 init();
+
+// ── Dynamic nebula background ──
+(function(){
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Particle factory
+  function makeParticle(){
+    return {
+      x:  Math.random() * W,
+      y:  Math.random() * H,
+      r:  Math.random() * 1.8 + 0.3,
+      vx: (Math.random() - 0.5) * 0.18,
+      vy: (Math.random() - 0.5) * 0.18,
+      // colour: mostly white/blue-white, rare gold
+      hue:   Math.random() < 0.12 ? 42 : (Math.random() < 0.3 ? 200 : 0),
+      sat:   Math.random() < 0.4  ? Math.floor(Math.random()*40+20) : 0,
+      alpha: Math.random() * 0.55 + 0.1,
+      pulse: Math.random() * Math.PI * 2,
+      pulseSpeed: Math.random() * 0.008 + 0.003,
+    };
+  }
+
+  // Init particles
+  const COUNT = Math.min(180, Math.floor(W * H / 8000));
+  for(let i = 0; i < COUNT; i++) particles.push(makeParticle());
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+
+    particles.forEach(p => {
+      p.pulse += p.pulseSpeed;
+      const a = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
+
+      // Soft glow
+      const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3.5);
+      const col = p.sat > 0
+        ? `hsla(${p.hue},${p.sat}%,80%,`
+        : `rgba(200,215,255,`;
+      grd.addColorStop(0,   col + (a * 0.9) + ')');
+      grd.addColorStop(0.4, col + (a * 0.3) + ')');
+      grd.addColorStop(1,   col + '0)');
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = grd;
+      ctx.fill();
+
+      // Sharp core
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.sat > 0
+        ? `hsla(${p.hue},${p.sat}%,95%,${a})`
+        : `rgba(230,240,255,${a})`;
+      ctx.fill();
+
+      // Drift
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // Wrap edges
+      if(p.x < -10) p.x = W + 10;
+      if(p.x > W + 10) p.x = -10;
+      if(p.y < -10) p.y = H + 10;
+      if(p.y > H + 10) p.y = -10;
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+})();
+
 </script>
 </body>
 </html>
