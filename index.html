@@ -64,7 +64,7 @@
   #org .section,#members .section,#join .section{min-height:inherit;}
 
   /* Hero */
-  .hero{position:relative;z-index:1;padding:4rem 2rem 3rem;text-align:center;overflow:hidden;}
+  .hero{position:relative;z-index:1;padding:1.25rem 2rem 3rem;text-align:center;overflow:hidden;}
   .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% -10%,rgba(77,217,245,0.06) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 80% 60%,rgba(200,169,110,0.03) 0%,transparent 60%);pointer-events:none;}
   .hero-tag{display:inline-block;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--cyan-dim);border:1px solid var(--border);padding:3px 14px;margin-bottom:1.5rem;}
   .hero-logo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border-gold);margin:0 auto 1.1rem;display:block;box-shadow:0 0 24px rgba(200,169,110,0.15);}
@@ -164,7 +164,7 @@
 <div class="loading-screen" id="loadScreen">
   <div class="load-ring"></div>
   <div class="load-tag">CONNECTING TO RSI NETWORK</div>
-  <div class="load-sid">11111111</div>
+  <div class="load-sid">华夏</div>
   <div class="load-sub" id="loadSub">正在拉取组织数据...</div>
 </div>
 
@@ -354,11 +354,14 @@ function renderOrg(d){
 
   // Stats
   orgTotalMembers = parseInt(d.members) || 0;
+  const ARCHETYPE = { Corporation:'企业', PMC:'私人军事', Faith:'信仰', Organization:'组织', Club:'俱乐部' };
+  const COMMITMENT = { Hardcore:'硬核', Regular:'常规', Casual:'休闲' };
+  const LANG = { English:'英语', Chinese:'中文', French:'法语', German:'德语', Spanish:'西班牙语', Portuguese:'葡萄牙语', Russian:'俄语', Japanese:'日语', Korean:'韩语', Italian:'意大利语', Polish:'波兰语', Dutch:'荷兰语', Turkish:'土耳其语' };
   document.getElementById('sMembers').textContent = d.members ?? '-';
-  document.getElementById('sType').textContent = d.archetype || '-';
-  document.getElementById('sCommit').textContent = d.commitment || '-';
+  document.getElementById('sType').textContent = ARCHETYPE[d.archetype] || d.archetype || '-';
+  document.getElementById('sCommit').textContent = COMMITMENT[d.commitment] || d.commitment || '-';
   document.getElementById('sRecruit').textContent = d.recruiting ? '开放中' : '已关闭';
-  document.getElementById('sLang').textContent = d.lang || '-';
+  document.getElementById('sLang').textContent = LANG[d.lang] || d.lang || '-';
 
   // Banner
   if(d.banner){
@@ -369,15 +372,16 @@ function renderOrg(d){
   const cards = [
     {l:'组织名称', v:name},
     {l:'SID', v:ORG_SID, c:'cyan'},
-    {l:'类型', v:d.archetype||'-'},
-    {l:'参与程度', v:d.commitment||'-', c:'gold'},
-    {l:'语言', v:d.lang||'-'},
+    {l:'类型', v:ARCHETYPE[d.archetype]||d.archetype||'-'},
+    {l:'参与程度', v:COMMITMENT[d.commitment]||d.commitment||'-', c:'gold'},
+    {l:'语言', v:LANG[d.lang]||d.lang||'-'},
     {l:'成员数', v:(d.members??'-')+'人', c:'cyan'},
     {l:'招募状态', v:d.recruiting?'开放中':'已关闭', c:d.recruiting?'green':'red'},
     {l:'角色扮演', v:d.roleplay?'是':'否'},
   ];
-  if(d.focus?.primary?.name) cards.push({l:'主要方向', v:d.focus.primary.name});
-  if(d.focus?.secondary?.name) cards.push({l:'次要方向', v:d.focus.secondary.name});
+  const FOCUS = { 'Exploration':'探索', 'Freelancing':'自由佣兵', 'Trading':'贸易', 'Mining':'采矿', 'Bounty Hunting':'赏金猎人', 'Bounty_Hunting':'赏金猎人', 'Piracy':'海盗', 'Carebearing':'互助', 'Engineering':'工程', 'Resources':'资源', 'Transport':'运输', 'Scouting':'侦察', 'Medical':'医疗', 'Fuel':'燃料', 'Repair':'维修', 'Manufacturing':'制造', 'Research':'研究', 'Security':'安保', 'Military':'军事', 'Social':'社交', 'Roleplay':'角色扮演', 'Streaming':'直播', 'Recruiting':'招募' };
+  if(d.focus?.primary?.name) cards.push({l:'主要方向', v:FOCUS[d.focus.primary.name]||d.focus.primary.name});
+  if(d.focus?.secondary?.name) cards.push({l:'次要方向', v:FOCUS[d.focus.secondary.name]||d.focus.secondary.name});
   document.getElementById('infoGrid').innerHTML = cards.map(c=>
     `<div class="info-card"><div class="info-lbl">${c.l}</div><div class="info-val ${c.c||''}">${c.v}</div></div>`
   ).join('');
