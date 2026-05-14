@@ -141,7 +141,7 @@
   .pg-info{font-size:11px;color:var(--text-dim);text-align:center;margin-top:0.6rem;letter-spacing:1px;}
 
   /* Join */
-  .join-box{background:var(--bg-card);border:1px solid var(--border);padding:2rem;max-width:560px;position:relative;}
+  .join-box{background:var(--bg-card);border:1px solid var(--border);padding:2rem;max-width:560px;position:relative;margin:0 auto;}
   .join-box::before,.join-box::after{content:'';position:absolute;width:14px;height:14px;border-color:var(--gold-dim);border-style:solid;opacity:0.4;}
   .join-box::before{top:8px;left:8px;border-width:1px 0 0 1px;}
   .join-box::after{bottom:8px;right:8px;border-width:0 1px 1px 0;}
@@ -197,9 +197,12 @@
     <div class="hero-sid" id="heroSid">SID · 11111111</div>
     <div class="hero-divider"></div>
     <p class="hero-desc" id="heroDesc">正在加载组织简介...</p>
-    <div class="hero-btns">
-      <a class="btn btn-primary" id="rsiBtn" href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank">RSI 官方页面</a>
-      <a class="btn btn-ghost" onclick="showPage('members',document.querySelectorAll('.nav-links a')[2])">浏览成员</a>
+    <div class="hero-btns" style="flex-direction:column;align-items:center;gap:0.75rem;">
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
+        <a class="btn btn-primary" id="rsiBtn" href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank">RSI 官方页面</a>
+        <a class="btn btn-primary" onclick="showPage('join',document.querySelectorAll('.nav-links a')[3])">加入申请</a>
+      </div>
+
     </div>
   </div>
   <div class="stats-bar">
@@ -268,10 +271,9 @@
     <div class="join-box">
       <div id="recruitBadge"></div>
       <p style="font-size:13px;color:var(--text-dim);line-height:1.9;margin-bottom:1.25rem;">通过以下步骤在 RSI 官网申请加入：</p>
-      <div class="step-row"><span class="step-n">01</span><span style="font-size:13px;">访问该组织的 RSI 官方页面，并加入q群寻找管理员通过</span></div>
+      <div class="step-row"><span class="step-n">01</span><span style="font-size:13px;">访问该组织的 RSI 官方页面</span></div>
       <div class="step-row"><span class="step-n">02</span><span style="font-size:13px;">点击 <strong style="color:var(--cyan)">"Apply to Join"</strong> 按钮</span></div>
       <div class="step-row"><span class="step-n">03</span><span style="font-size:13px;">等待管理员审核通过，即可成为正式成员</span></div>
-	  <div class="step-row"><span class="step-n">04</span><span style="font-size:13px;">成为正式成员后寻找Q群内管理员通过</span></div>
       <div style="margin-top:1.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
         <a class="btn btn-primary" id="joinBtn" href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank">前往 RSI 申请页面</a>
         <a class="btn btn-ghost" href="https://qm.qq.com/q/8wCNiHactG" target="_blank">加入 QQ 群</a>
@@ -369,7 +371,8 @@ function renderOrg(d){
   document.getElementById('sMembers').textContent = d.members ?? '-';
   document.getElementById('sType').textContent = ARCHETYPE[d.archetype] || d.archetype || '-';
   document.getElementById('sCommit').textContent = COMMITMENT[d.commitment] || d.commitment || '-';
-  document.getElementById('sRecruit').textContent = d.recruiting ? '开放中' : '已关闭';
+  document.getElementById('sRecruit').textContent = '开放中';
+  document.getElementById('sRecruit').style.color = 'var(--green)';
   document.getElementById('sLang').textContent = LANG[d.lang] || d.lang || '-';
 
   // Banner
@@ -405,7 +408,7 @@ function renderOrg(d){
   // Recruit badge
   document.getElementById('recruitBadge').innerHTML = d.recruiting
     ? `<div class="recruit-badge recruit-open"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;"></span>招募状态：开放中</div>`
-    : `<div class="recruit-badge recruit-closed">招募状态：已关闭</div>`;
+    : `<div class="recruit-badge recruit-open"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.5s infinite;"></span>招募状态：开放中</div>`;
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
