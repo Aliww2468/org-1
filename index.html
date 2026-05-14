@@ -48,6 +48,9 @@
   .nav-links a:hover,.nav-links a.active{color:var(--cyan);border-bottom-color:var(--cyan);}
   .nav-status{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--green);letter-spacing:1px;}
   .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+  .dot.offline{background:var(--red);}
+  .dot.degraded{background:var(--gold);}
+  .dot.checking{background:var(--text-dim);}
 
   /* Page system */
   nav{flex-shrink:0;}
@@ -130,6 +133,9 @@
   .filter-select:focus{border-color:var(--cyan);}
   .filter-select option{background:var(--bg-card);}
   .filter-count{font-size:11px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap;margin-left:auto;}
+
+
+  @keyframes svRing{0%{transform:scale(1);opacity:0.4;}70%{transform:scale(2.2);opacity:0;}100%{transform:scale(2.2);opacity:0;}}
   /* Spinner */
   .spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.8s linear infinite;margin:2rem auto;}
 
@@ -183,8 +189,14 @@
     <a onclick="showPage('org',this)">组织</a>
     <a onclick="showPage('members',this)">成员</a>
     <a onclick="showPage('join',this)">加入</a>
+    <a onclick="showPage('status',this)">状态</a>
   </div>
-  <div class="nav-status"><div class="dot"></div><span id="navStatusTxt">连接中...</span></div>
+  <div class="nav-status" id="navStatus" style="gap:10px;cursor:default;">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="dot" id="serverDot"></div>
+      <span id="serverTxt" style="font-size:10px;letter-spacing:1px;">检测中...</span>
+    </div>
+  </div>
 </nav>
 
 <!-- HOME -->
@@ -282,6 +294,34 @@
   </div>
 </div>
 
+
+<!-- STATUS -->
+<div class="page" id="status">
+  <div class="section">
+    <div class="sec-hd"><div class="sec-line"></div><div class="sec-title">游戏状态</div><div class="sec-line"></div></div>
+
+    <!-- Stats cards -->
+    <div class="info-grid" id="statusGrid" style="margin-bottom:2rem;">
+      <div class="info-card"><div class="info-lbl">当前 LIVE 版本</div><div class="info-val cyan" id="stCurrentLive">—</div></div>
+      <div class="info-card">
+        <div class="info-lbl">服务器状态</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+          <div style="position:relative;width:14px;height:14px;flex-shrink:0;">
+            <div id="svPulseRing" style="position:absolute;inset:0;border-radius:50%;background:var(--text-dim);opacity:0.3;animation:svRing 2s infinite;"></div>
+            <div id="svDot" style="position:absolute;inset:2px;border-radius:50%;background:var(--text-dim);"></div>
+          </div>
+          <span id="svTxt" style="font-size:14px;font-weight:600;color:var(--text-dim);">检测中...</span>
+        </div>
+      </div>
+      <div class="info-card"><div class="info-lbl">总注册账号</div><div class="info-val" id="stFans">—</div></div>
+      <div class="info-card"><div class="info-lbl">总众筹金额</div><div class="info-val gold" id="stFunds">—</div></div>
+    </div>
+
+
+
+  </div>
+</div>
+
 <footer>
   <div class="footer-name" id="footerName">ORG · 11111111</div>
   <div class="footer-copy">数据来源：starcitizen-api.com &amp; robertsspaceindustries.com · 仅供展示</div>
@@ -291,6 +331,8 @@
 const API_KEY = 'ciLmLvAxqOLY6KLYGCr3K5H4toeIjj5M';
 const ORG_SID = '11111111';
 const BASE = `https://api.starcitizen-api.com/${API_KEY}/v1/live`;
+// 填入你的 Cloudflare Worker URL（部署 worker.js 后获得）
+const PROXY_BASE = ''; // 例如：https://sc-proxy.yourname.workers.dev
 
 let memberCache = {}, curPage = 1, orgTotalMembers = 0;
 
@@ -325,6 +367,7 @@ function showPage(id,el){
   if(el)el.classList.add('active');
   window.scrollTo(0,0);
   if(id==='members' && !memberCache['all']) loadMembers(1);
+  if(id==='status') fetchStatus();
 }
 
 async function apiGet(endpoint){
@@ -343,7 +386,7 @@ function renderOrg(d){
   // Nav & footer
   document.getElementById('navLogo').textContent = ''; const em = document.createElement('em'); em.textContent = name; document.getElementById('navLogo').appendChild(em);
   document.getElementById('footerName').textContent = name + ' · RSI ORG';
-  document.getElementById('navStatusTxt').textContent = 'LIVE · RSI';
+  document.getElementById('serverTxt').textContent = '数据已同步';
 
   // Hero logo
   const lw = document.getElementById('heroLogo');
@@ -626,23 +669,99 @@ function goPage(p){
   document.getElementById('members').scrollIntoView({behavior:'smooth'});
 }
 
+async function fetchServerStatus(){
+  const dot = document.getElementById('serverDot');
+  const txt = document.getElementById('serverTxt');
+  const nav = document.getElementById('navStatus');
+  try{
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    const r = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/cache/organization/${ORG_SID}`, { signal: controller.signal });
+    clearTimeout(timer);
+    const d = await r.json();
+    if(d?.success){
+      dot.className='dot'; txt.textContent='服务器正常'; nav.style.color='var(--green)';
+    } else {
+      dot.className='dot degraded'; txt.textContent='状态异常'; nav.style.color='var(--gold)';
+    }
+  } catch(e){
+    dot.className='dot offline';
+    txt.textContent = e.name==='AbortError' ? '连接超时' : '服务器离线';
+    nav.style.color='var(--red)';
+  }
+}
+
+async function fetchStatus(){
+  try{
+    const statsRes = await fetch(`${BASE}/stats`);
+    const stats = (await statsRes.json())?.data;
+
+    if(stats){
+      document.getElementById('stCurrentLive').textContent = stats.current_live || '—';
+      document.getElementById('stFans').textContent = stats.fans ? Number(stats.fans).toLocaleString() + ' 人' : '—';
+      const funds = stats.funds ? '$' + (stats.funds / 100).toLocaleString('en-US', {maximumFractionDigits:0}) : '—';
+      document.getElementById('stFunds').textContent = funds;
+    }
+
+    // Server status ping
+    try{
+      const controller = new AbortController();
+      const timer = setTimeout(()=>controller.abort(), 8000);
+      const sr = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/cache/organization/${ORG_SID}`,{signal:controller.signal});
+      clearTimeout(timer);
+      const sd = await sr.json();
+      const dot = document.getElementById('svDot');
+      const ring = document.getElementById('svPulseRing');
+      const txt = document.getElementById('svTxt');
+      if(sd?.success){
+        dot.style.background = 'var(--green)';
+        ring.style.background = 'var(--green)';
+        txt.style.color = 'var(--green)';
+        txt.textContent = '运行正常';
+      } else {
+        dot.style.background = 'var(--gold)';
+        ring.style.background = 'var(--gold)';
+        txt.style.color = 'var(--gold)';
+        txt.textContent = '状态异常';
+      }
+    } catch(e){
+      const dot = document.getElementById('svDot');
+      const ring = document.getElementById('svPulseRing');
+      const txt = document.getElementById('svTxt');
+      dot.style.background = 'var(--red)';
+      ring.style.background = 'var(--red)';
+      txt.style.color = 'var(--red)';
+      txt.textContent = e.name==='AbortError'?'连接超时':'无法连接';
+    }
+
+    document.getElementById('statusUpdated').textContent =
+      '数据更新于：' + new Date().toLocaleString('zh-CN');
+  } catch(e){
+    console.error('fetchStatus error:', e);
+  }
+}
+
 async function init(){
+  document.getElementById('loadSid').textContent = '···';
   document.getElementById('loadSub').textContent = `正在连接 RSI 网络，拉取 ${ORG_SID}...`;
   try{
     const org = await apiGet(`organization/${ORG_SID}`);
     renderOrg(org);
-    // Dismiss loading
     const ls = document.getElementById('loadScreen');
     await sleep(500);
     ls.classList.add('out');
     setTimeout(()=>ls.style.display='none', 500);
-    // Preload page 1 members in background
     loadMembers(1);
+    fetchServerStatus();
+    setInterval(fetchServerStatus, 3 * 60 * 1000);
   } catch(e){
     document.getElementById('loadScreen').style.display='none';
     const fs = document.getElementById('fatalScreen');
     document.getElementById('fatalMsg').textContent =
-      `无法获取组织 "${ORG_SID}" 的数据。\n错误信息：${e.message}\n\n可能原因：API Key 已过期、SID 不存在、或 CORS 限制。`;
+      `无法获取组织 "${ORG_SID}" 的数据。
+错误信息：${e.message}
+
+可能原因：API Key 已过期、SID 不存在、或 CORS 限制。`;
     fs.style.display='flex';
   }
 }
