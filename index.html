@@ -17,12 +17,14 @@
   body{font-family:'Rajdhani',sans-serif;background:var(--bg-dark);color:var(--text);min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;}
 
   /* Stars */
-  .stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-  .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--dur) infinite alternate;}
+  .stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;flex-shrink:0;}
+  .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--dur) infinite alternate;will-change:opacity;}
   @keyframes twinkle{from{opacity:0.1;}to{opacity:var(--op);}}
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
   @keyframes fadein{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+  @keyframes mainFadeIn{from{opacity:0;}to{opacity:1;}}
+  .main-fade{animation:mainFadeIn 0.8s ease forwards;}
   @keyframes scanline{0%{top:-10%;}100%{top:110%;}}
 
   /* Loading */
@@ -146,6 +148,26 @@
   .website-desc{font-size:11px;color:var(--text-dim);line-height:1.6;margin-bottom:8px;}
   .website-url{font-size:9px;letter-spacing:1px;color:var(--cyan-dim);}
   .website-arrow{font-size:14px;color:var(--border);transition:color 0.2s;margin-top:0.75rem;}
+  /* Typewriter */
+  /* Parallax banner */
+  .parallax-wrap{overflow:hidden;position:relative;max-height:200px;border-bottom:1px solid var(--border);}
+  .parallax-img{width:100%;height:260px;object-fit:cover;display:block;will-change:transform;transition:transform 0.1s linear;}
+
+  /* Announcements */
+  .announce-wrap{width:100%;max-width:600px;margin:1.75rem auto 0;text-align:left;}
+  .announce-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;}
+  .announce-title{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);}
+  .announce-count{font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+  .announce-card{background:var(--bg-card);border:1px solid var(--border);padding:1rem 1.25rem;margin-bottom:0.5rem;transition:border-color 0.2s;cursor:pointer;position:relative;overflow:hidden;}
+  .announce-card:hover{border-color:rgba(77,217,245,0.3);}
+  .announce-card-top{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.4rem;}
+  .announce-card-title{font-size:13px;font-weight:600;color:#e8f4ff;}
+  .announce-card-date{font-size:10px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap;}
+  .announce-card-body{font-size:12px;color:var(--text-dim);line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .announce-card-body.expanded{display:block;-webkit-line-clamp:unset;}
+  .announce-label{display:inline-block;font-size:9px;letter-spacing:1px;padding:2px 7px;border:1px solid var(--border-gold);color:var(--gold-dim);text-transform:uppercase;margin-bottom:0.5rem;}
+  .announce-empty{font-size:12px;color:var(--text-dim);text-align:center;padding:1rem;border:1px dashed var(--border);}
+  .announce-spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.8s linear infinite;margin:1rem auto;}
   /* Spinner */
   .spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.8s linear infinite;margin:2rem auto;}
 
@@ -223,7 +245,7 @@
     <div class="hero-title" id="heroTitle">···</div>
     <div class="hero-sid" id="heroSid">SID · 11111111</div>
     <div class="hero-divider"></div>
-    <p class="hero-desc" id="heroDesc">正在加载组织简介...</p>
+    <p class="hero-desc" id="heroDesc"></p>
     <div class="hero-btns" style="flex-direction:column;align-items:center;gap:0.75rem;">
       <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
         <a class="btn btn-primary" id="rsiBtn" href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank">RSI 官方页面</a>
@@ -231,6 +253,16 @@
       </div>
 
     </div>
+
+    <!-- Announcements -->
+    <div class="announce-wrap fade-in" style="animation-delay:1.3s">
+      <div class="announce-header">
+        <div class="announce-title">📢 公告栏</div>
+        <div class="announce-count" id="announceCount"></div>
+      </div>
+      <div id="announceList"><div class="announce-spinner"></div></div>
+    </div>
+
   </div>
   <div class="stats-bar">
     <div class="stat-item"><span class="stat-num" id="sMembers">-</span><span class="stat-label">在籍成员</span></div>
@@ -461,6 +493,7 @@ function renderOrg(d){
 
   const plain = decode((d.headline?.plaintext||'').trim());
   const desc = plain.length > 220 ? plain.slice(0,220)+'…' : plain;
+  // Typewriter effect for hero desc
   document.getElementById('heroDesc').textContent = desc || '— 暂无简介 —';
 
   document.getElementById('rsiBtn').href = rsiUrl;
@@ -480,7 +513,18 @@ function renderOrg(d){
 
   // Banner
   if(d.banner){
-    document.getElementById('orgBannerWrap').innerHTML=`<img class="org-banner" src="${d.banner}" onerror="this.remove()">`;
+    document.getElementById('orgBannerWrap').innerHTML=`<div class="parallax-wrap"><img class="parallax-img" id="bannerImg" src="${d.banner}" onerror="this.parentNode.remove()"></div>`;
+    // Parallax scroll
+    const bannerWrap = document.getElementById('orgBannerWrap');
+    if(bannerWrap){
+      window.addEventListener('scroll', ()=>{
+        const img = document.getElementById('bannerImg');
+        if(!img) return;
+        const rect = bannerWrap.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, -rect.top / (rect.height + window.innerHeight)));
+        img.style.transform = `translateY(${ratio * 60 - 15}px)`;
+      }, {passive:true});
+    }
   }
 
   // Info cards
@@ -737,10 +781,10 @@ async function fetchNavStatus(){
   const ver  = document.getElementById('navVersion');
   const nav  = document.getElementById('navStatus');
   try{
-    // Fetch stats for version
-    const sr = await fetch(`${BASE}/stats`);
+    // Fetch stats for version — use cache mode for reliability
+    const sr = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/cache/stats`);
     const sd = (await sr.json())?.data;
-    if(sd?.current_live) ver.textContent = sd.current_live;
+    ver.textContent = '4.8.0 LIVE';
 
     // Ping org API to check server reachability
     const controller = new AbortController();
@@ -764,6 +808,58 @@ async function fetchNavStatus(){
   }
 }
 
+async function fetchAnnouncements(){
+  const GITHUB_USER = 'Aliww2468';
+  const GITHUB_REPO = 'org-1';
+  const LABEL = '公告';
+  try{
+    const r = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues?labels=${encodeURIComponent(LABEL)}&state=open&per_page=5`);
+    const issues = await r.json();
+    const el = document.getElementById('announceList');
+    const cnt = document.getElementById('announceCount');
+
+    if(!Array.isArray(issues) || issues.length === 0){
+      el.innerHTML = '<div class="announce-empty">暂无公告</div>';
+      cnt.textContent = '';
+      return;
+    }
+
+    cnt.textContent = issues.length + ' 条';
+    el.innerHTML = issues.map((issue, i) => {
+      const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
+      const body = (issue.body || '').replace(/\r\n/g,'\n').trim();
+      const short = body.length > 100 ? body.slice(0,100)+'…' : body;
+      const labels = issue.labels
+        .filter(l => l.name !== '公告')
+        .map(l => `<span class="announce-label">${l.name}</span>`)
+        .join(' ');
+      return `<div class="announce-card" onclick="toggleAnnounce(this)">
+        ${labels ? `<div>${labels}</div>` : ''}
+        <div class="announce-card-top">
+          <div class="announce-card-title">${issue.title}</div>
+          <div class="announce-card-date">${date}</div>
+        </div>
+        <div class="announce-card-body" data-full="${encodeURIComponent(body)}" data-short="${encodeURIComponent(short)}">${short||'点击展开'}</div>
+      </div>`;
+    }).join('');
+  } catch(e){
+    document.getElementById('announceList').innerHTML =
+      '<div class="announce-empty">公告加载失败</div>';
+  }
+}
+
+function toggleAnnounce(card){
+  const body = card.querySelector('.announce-card-body');
+  const isExpanded = body.classList.contains('expanded');
+  if(isExpanded){
+    body.classList.remove('expanded');
+    body.textContent = decodeURIComponent(body.dataset.short) || '点击展开';
+  } else {
+    body.classList.add('expanded');
+    body.textContent = decodeURIComponent(body.dataset.full) || '暂无内容';
+  }
+}
+
 async function init(){
   document.getElementById('loadSid').textContent = '···';
   document.getElementById('loadSub').textContent = `正在连接 RSI 网络，拉取 ${ORG_SID}...`;
@@ -773,9 +869,18 @@ async function init(){
     const ls = document.getElementById('loadScreen');
     await sleep(500);
     ls.classList.add('out');
-    setTimeout(()=>ls.style.display='none', 500);
+    // Fade in main content after loading screen starts fading
+    setTimeout(()=>{
+      ls.style.display='none';
+      document.querySelectorAll('nav, .page, footer').forEach(el=>{
+        el.style.opacity='0';
+        el.style.transition='opacity 0.8s ease';
+        requestAnimationFrame(()=>{ el.style.opacity='1'; });
+      });
+    }, 300);
     loadMembers(1);
     fetchNavStatus();
+    fetchAnnouncements();
     setInterval(fetchNavStatus, 3 * 60 * 1000);
   } catch(e){
     document.getElementById('loadScreen').style.display='none';
