@@ -835,12 +835,10 @@ async function fetchNavStatus(){
   const nav  = document.getElementById('navStatus');
   try{
     // Fetch stats for version — use cache mode for reliability
-    const sr = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/cache/stats`);
+    const sr = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/live/stats`);
     const sd = (await sr.json())?.data;
-    if(sd?.current_live){
-      ver.textContent = sd.current_live;
-      document.getElementById('mobileVersion').textContent = sd.current_live;
-    }
+    ver.textContent = 'LiVE 4.8.0';
+    document.getElementById('mobileVersion').textContent = 'LiVE 4.8.0';
 
     // Ping org API to check server reachability
     const controller = new AbortController();
@@ -951,6 +949,7 @@ function closeMenu(){
 async function init(){
   document.getElementById('loadSid').textContent = '···';
   document.getElementById('loadSub').textContent = `正在连接 RSI 网络，拉取 ${ORG_SID}...`;
+  fetchNavStatus(); // 提前并行拉取版本号和服务器状态
   try{
     const org = await apiGet(`organization/${ORG_SID}`);
     renderOrg(org);
