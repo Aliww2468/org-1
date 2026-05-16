@@ -1022,49 +1022,49 @@ function goPage(p){
 
 
 async function fetchNavStatus(){
-  const dot = document.getElementById('serverDot');
-  const txt = document.getElementById('serverTxt');
   const ver = document.getElementById('navVersion');
   if(ver) ver.textContent = 'LiVE 4.8.0';
-  if(!dot || !txt) return;
+
+  // Helper: update both nav and mobile menu
+  function setStatus(color, label){
+    const ring = document.getElementById('serverRing');
+    const core = document.getElementById('serverCore');
+    const txt  = document.getElementById('serverTxt');
+    const mr   = document.getElementById('serverRingMobile');
+    const mt   = document.getElementById('serverTxtMobile');
+    if(ring){ ring.style.background=color; color==='#4a6070' ? ring.classList.remove('dot-breathing') : ring.classList.add('dot-breathing'); }
+    if(core) core.style.background=color;
+    if(txt){  txt.style.color=color;  txt.textContent=label; }
+    if(mr)    mr.style.background=color;
+    if(mt){   mt.style.color=color;   mt.textContent=label; }
+  }
+
   try{
     const controller = new AbortController();
-    const timer = setTimeout(()=>controller.abort(), 8000);
+    const timer = setTimeout(()=>controller.abort(), 10000);
+    // Use cache mode for reliability
     const pr = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/cache/organization/${ORG_SID}`,{signal:controller.signal});
     clearTimeout(timer);
     const pd = await pr.json();
-    const ring = document.getElementById('serverRing');
-    const core = document.getElementById('serverCore');
-    const setDot = function(color){
-      if(ring){ ring.style.background=color; ring.classList.add('dot-breathing'); }
-      if(core) core.style.background=color;
-      txt.style.color=color;
-    };
     if(pd?.success){
-      setDot('#4caf88');
-      txt.textContent='服务器正常';
-      const mr=document.getElementById('serverRingMobile'); if(mr) mr.style.background='#4caf88';
-      const mt=document.getElementById('serverTxtMobile'); if(mt){mt.textContent='服务器正常';mt.style.color='#4caf88';}
+      setStatus('#4caf88', '服务器正常');
     } else {
-      setDot('#c8a040');
-      txt.textContent='状态异常';
-      const mr=document.getElementById('serverRingMobile'); if(mr) mr.style.background='#c8a040';
-      const mt=document.getElementById('serverTxtMobile'); if(mt){mt.textContent='状态异常';mt.style.color='#c8a040';}
+      setStatus('#c8a040', '状态异常');
     }
   } catch(e){
-    const ring = document.getElementById('serverRing');
-    const core = document.getElementById('serverCore');
     if(e.name==='AbortError'){
-      if(ring){ ring.style.background='#e05050'; ring.classList.add('dot-breathing'); }
-      if(core) core.style.background='#e05050';
-      txt.style.color='#e05050';
-      txt.textContent='连接超时';
+      setStatus('#e05050', '连接超时');
     } else {
-      // Local file:// — don't show error
-      if(ring){ ring.style.background='#4a6070'; ring.classList.remove('dot-breathing'); }
-      if(core) core.style.background='#4a6070';
-      txt.style.color='#4a6070';
-      txt.textContent='无法检测';
+      // Retry once after 3s
+      setTimeout(async function(){
+        try{
+          const pr2 = await fetch(`https://api.starcitizen-api.com/${API_KEY}/v1/cache/organization/${ORG_SID}`);
+          const pd2 = await pr2.json();
+          setStatus(pd2?.success ? '#4caf88' : '#c8a040', pd2?.success ? '服务器正常' : '状态异常');
+        } catch(e2){
+          setStatus('#4a6070', '无法检测');
+        }
+      }, 3000);
     }
   }
 }
