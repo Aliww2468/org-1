@@ -393,17 +393,41 @@ footer{
   .website-arrow{font-size:12px;color:rgba(74,179,232,0.3);margin-top:0.5rem;transition:color 0.2s;}
   .website-card:hover .website-arrow{color:#4ab3e8;}
 
+
+  /* Org info grid */
+  .org-info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1px;background:rgba(74,179,232,0.08);margin-bottom:2rem;}
+  .org-info-card{background:#0d1c30;padding:1.25rem 1.5rem;}
+  .org-info-lbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(74,179,232,0.5);margin-bottom:6px;font-family:'Orbitron',monospace;}
+  .org-info-val{font-size:15px;font-weight:600;color:#e8f4ff;}
+
+  /* Org headline */
+  .org-headline{background:#0d1c30;border-left:3px solid rgba(74,179,232,0.4);padding:1.5rem 2rem;font-size:13px;color:#7090a8;line-height:2;margin-bottom:2rem;font-style:italic;}
+
+  /* History */
+  .org-history{background:#0d1c30;border:1px solid rgba(74,179,232,0.1);padding:2rem;}
+  .org-history-title{font-size:12px;font-weight:700;color:#4ab3e8;margin-bottom:0.75rem;font-family:'Orbitron',monospace;letter-spacing:2px;}
+  .org-history-body{font-size:13px;color:#7090a8;line-height:2;margin-bottom:1.5rem;}
+  .org-history-body:last-child{margin-bottom:0;}
+
+  /* Banner */
+  .org-banner{width:100%;max-height:240px;object-fit:cover;display:block;}
+
 </style>
 </head>
 <body>
 
 <!-- Top bar -->
 <!-- Loading -->
-<div id="loadScreen" style="position:fixed;inset:0;z-index:500;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;transition:opacity 0.5s;">
-  <div style="width:48px;height:48px;border:2px solid rgba(255,255,255,0.1);border-top-color:#1e8bc3;border-radius:50%;animation:ldspin 0.9s linear infinite;"></div>
-  <div style="font-size:10px;letter-spacing:4px;color:#4ab3e8;">CONNECTING TO RSI</div>
-  <div style="font-size:20px;font-weight:200;color:#fff;letter-spacing:6px;" id="loadSid">···</div>
-  <div style="font-size:11px;color:#4a6070;letter-spacing:1px;" id="loadSub">正在拉取组织数据...</div>
+<div id="loadScreen" style="position:fixed;inset:0;z-index:500;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.75rem;transition:opacity 0.6s;">
+  <!-- 组织名 -->
+  <div style="font-family:'ZCOOL XiaoWei','Microsoft YaHei',serif;font-size:clamp(40px,8vw,72px);color:#4ab3e8;letter-spacing:12px;font-weight:400;" id="loadSid">华夏</div>
+  <!-- 圆形转圈 -->
+  <div style="position:relative;width:56px;height:56px;">
+    <div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(74,179,232,0.12);"></div>
+    <div style="position:absolute;inset:0;border-radius:50%;border:2px solid transparent;border-top-color:#4ab3e8;animation:ldspin 1s cubic-bezier(0.4,0,0.6,1) infinite;"></div>
+  </div>
+  <!-- 提示文字 -->
+  <div style="font-size:12px;color:#4a6070;letter-spacing:2px;" id="loadSub">正在拉取组织数据...</div>
 </div>
 <div id="fatalScreen" style="display:none;position:fixed;inset:0;z-index:500;background:#0a1628;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:2rem;text-align:center;">
   <div style="font-size:14px;color:#e05050;letter-spacing:2px;">数据加载失败</div>
@@ -427,14 +451,17 @@ footer{
     <a onclick="showMainPage('join')" id="navJoin">加入</a>
   </div>
   <div class="nav-right">
-    <span class="nav-icon nav-status-item">⚙ <span id="navVersion">LiVE 4.8.0</span></span>
-    <span class="nav-icon nav-status-item" style="display:flex;align-items:center;gap:6px;">
+    <a href="https://status.robertsspaceindustries.com/" target="_blank" style="display:flex;align-items:center;gap:10px;text-decoration:none;padding:4px 10px;border:1px solid rgba(74,179,232,0.15);transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(74,179,232,0.4)'" onmouseout="this.style.borderColor='rgba(74,179,232,0.15)'">
+    <span class="nav-icon nav-status-item" style="margin:0;">⚙ <span id="navVersion">LiVE 4.8.0</span></span>
+    <span style="color:rgba(74,179,232,0.2);">|</span>
+    <span class="nav-icon nav-status-item" style="display:flex;align-items:center;gap:6px;margin:0;">
       <span id="serverDot" style="position:relative;width:8px;height:8px;flex-shrink:0;display:inline-block;">
         <span id="serverRing" style="position:absolute;inset:0;border-radius:50%;background:#4a6070;opacity:0.4;"></span>
         <span id="serverCore" style="position:absolute;inset:1px;border-radius:50%;background:#4a6070;"></span>
       </span>
       <span id="serverTxt" style="color:#4a6070;">检测中...</span>
     </span>
+    </a>
     <a class="nav-cta" onclick="showMainPage('join')" style="cursor:pointer;">立即加入</a>
   </div>
   <!-- Hamburger button (mobile only) -->
@@ -542,19 +569,29 @@ footer{
 
 <!-- ═══════ PAGE: ORG ═══════ -->
 <div id="page-org" class="rsi-page" style="display:none;">
-<div id="orgBannerWrap"></div>
-<div class="section">
-  <div class="sec-hd"><div class="sec-line"></div><div class="sec-label">组织详情</div><div class="sec-line"></div></div>
-  <div id="orgInfoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;margin-bottom:1.5rem;"></div>
-  <div id="orgHeadline" style="display:none;background:var(--bg2);border:1px solid var(--border);padding:1.5rem;font-size:13px;color:var(--text2);line-height:1.9;margin-bottom:2rem;"></div>
 
+<!-- Banner -->
+<div id="orgBannerWrap" style="position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;background:linear-gradient(0deg,#060f1c 0%,transparent 40%);z-index:1;pointer-events:none;"></div>
+</div>
+
+<!-- Info grid -->
+<div class="section" style="padding-top:2rem;">
+  <div class="sec-hd"><div class="sec-line"></div><div class="sec-label">组织详情</div><div class="sec-line"></div></div>
+  <div id="orgInfoGrid" class="org-info-grid"></div>
+  <div id="orgHeadline" class="org-headline" style="display:none;"></div>
+
+  <!-- History -->
   <div class="sec-hd"><div class="sec-line"></div><div class="sec-label">舰队历史</div><div class="sec-line"></div></div>
-  <div style="background:var(--bg2);border:1px solid var(--border);padding:2rem;font-size:13px;color:var(--text2);line-height:2;">
-    <p style="margin-bottom:1.25rem;font-weight:600;color:#e8f4ff;">纪元2945·启航：龙出东方，星落尘寰</p>
-    <p style="margin-bottom:1.25rem;">当UEE（地球联合帝国）的疆域在银河边缘显露疲态，一群流淌着华夏血脉的星际公民，于地球亚洲轨道站缔结盟约——华夏舰队正式成立。初代舰长K神，曾是UEE舰队王牌飞行员，率百名同胞携三艘改装护卫舰"昆仑""泰山""秦岭"启程，以"守华夏之魂，拓星海之土"为誓言。</p>
-    <p style="margin-bottom:1.25rem;font-weight:600;color:#e8f4ff;">纪元2948·拓土：星轨为脉，筑垒安邦</p>
-    <p style="margin-bottom:1.25rem;">随着实力壮大，舰队在"玄武星域"建立首个永久性基地"昆仑堡"，成功发现"朱雀""白虎"两大未登记跳跃点，为人类开辟两条全新星际航线。</p>
-    <p style="font-weight:600;color:#e8f4ff;">纪元2960·传承：薪火不灭，星海永续</p>
+  <div class="org-history">
+    <div class="org-history-title">纪元 2945 · 启航：龙出东方，星落尘寰</div>
+    <div class="org-history-body">当UEE（地球联合帝国）的疆域在银河边缘显露疲态，一群流淌着华夏血脉的星际公民，于地球亚洲轨道站缔结盟约——华夏舰队正式成立。初代舰长K神，曾是UEE舰队王牌飞行员，率百名同胞携三艘改装护卫舰"昆仑""泰山""秦岭"启程，以"守华夏之魂，拓星海之土"为誓言。</div>
+    <div class="org-history-title">纪元 2948 · 拓土：星轨为脉，筑垒安邦</div>
+    <div class="org-history-body">随着实力壮大，舰队在"玄武星域"建立首个永久性基地"昆仑堡"，成功发现"朱雀""白虎"两大未登记跳跃点，为人类开辟两条全新星际航线。</div>
+    <div class="org-history-title">纪元 2952 · 盟誓：八方来归，共铸龙魂</div>
+    <div class="org-history-body">舰队规模突破千人，与多个顶尖组织缔结战略同盟，建立跨星系联合防御体系，华夏之名响彻已知宇宙。</div>
+    <div class="org-history-title">纪元 2960 · 传承：薪火不灭，星海永续</div>
+    <div class="org-history-body">第三代领导层接过火炬，以"引擎为翼，正义为刃"为新时代誓言，带领舰队迈向更广阔的星海征途。</div>
   </div>
 </div>
 </div><!-- end page-org -->
@@ -767,7 +804,6 @@ function renderOrg(d){
 
 
   const name = decode(d.name || ORG_SID);
-  (document.getElementById('loadSid')||{}).textContent = name;
   const rsiUrl = d.url || `https://robertsspaceindustries.com/en/orgs/${ORG_SID}`;
 
   // Nav & footer
@@ -848,9 +884,18 @@ function renderOrg(d){
   }
 
   // Recruit badge
-  (document.getElementById('recruitBadge')||{}).innerHTML = d.recruiting
-    ? `<div class="recruit-badge recruit-open"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;"></span>招募状态：开放中</div>`
-    : `<div class="recruit-badge recruit-open"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.5s infinite;"></span>招募状态：开放中</div>`;
+  const rb = document.getElementById('recruitBadge');
+  if(rb){
+    const color = '#4caf88';
+    const label = '开放中';
+    rb.innerHTML = `<div style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:${color};letter-spacing:1px;">
+      <span style="position:relative;width:10px;height:10px;flex-shrink:0;">
+        <span style="position:absolute;inset:0;border-radius:50%;background:${color};opacity:0.4;animation:breathe 2s ease-in-out infinite;"></span>
+        <span style="position:absolute;inset:2px;border-radius:50%;background:${color};"></span>
+      </span>
+      招募状态：${label}
+    </div>`;
+  }
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1201,7 +1246,6 @@ function closeMenu(){
 }
 
 async function init(){
-  (document.getElementById('loadSid')||{}).textContent = '···';
   (document.getElementById('loadSub')||{}).textContent = `正在连接 RSI 网络，拉取 ${ORG_SID}...`;
   fetchNavStatus(); // 提前并行拉取版本号和服务器状态
   try{
@@ -1238,7 +1282,26 @@ function showMainPage(page){
   var pages = ['home','org','members','websites','join'];
   for(var i=0;i<pages.length;i++){
     var d = document.getElementById('page-'+pages[i]);
-    if(d) d.style.display = (pages[i]===page) ? 'block' : 'none';
+    if(!d) continue;
+    if(pages[i]===page){
+      (function(el){
+        el.style.display='block';
+        el.style.opacity='0';
+        el.style.transform='translateY(8px)';
+        el.style.transition='none';
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            el.style.transition='opacity 0.35s ease, transform 0.35s ease';
+            el.style.opacity='1';
+            el.style.transform='translateY(0)';
+          });
+        });
+      })(d);
+    } else {
+      d.style.transition='none';
+      d.style.display='none';
+      d.style.opacity='0';
+    }
   }
   var navIds = {home:'navHome',org:'navOrg',members:'navMembers',websites:'navWebsites',join:'navJoin'};
   Object.keys(navIds).forEach(function(k){ var e=document.getElementById(navIds[k]); if(e) e.classList.remove('active'); });
@@ -1260,9 +1323,9 @@ function renderOrgPage(){
     const LANG2={English:'英语',Chinese:'中文',French:'法语',German:'德语',Spanish:'西班牙语'};
     const FOCUS2={'Persistent Universe':'持续宇宙',Exploration:'探索',Freelancing:'自由佣兵',Trading:'贸易',Mining:'采矿','Bounty Hunting':'赏金猎人',Piracy:'海盗',Security:'安保',Military:'军事'};
     const items=[
-      {l:'组织名称',v:d.name||'-'},{l:'SID',v:ORG_SID},{l:'类型',v:ARCHETYPE2[d.archetype]||d.archetype||'-'},
+      {l:'组织名称',v:decode(d.name||'-')},{l:'SID',v:ORG_SID},{l:'类型',v:ARCHETYPE2[d.archetype]||d.archetype||'-'},
       {l:'参与程度',v:COMMITMENT2[d.commitment]||d.commitment||'-'},{l:'语言',v:LANG2[d.lang]||d.lang||'-'},
-      {l:'成员数',v:(d.members||'-')+'人'},{l:'招募',v:d.recruiting?'开放中':'已关闭'},
+      {l:'成员数',v:(d.members||'-')+'人'},{l:'招募',v:'开放中'},
       {l:'角色扮演',v:d.roleplay?'是':'否'},
     ];
     if(d.focus?.primary?.name) items.push({l:'主要方向',v:FOCUS2[d.focus.primary.name]||d.focus.primary.name});
@@ -1270,11 +1333,13 @@ function renderOrgPage(){
     grid.innerHTML = items.map(function(c){
       return '<div class="org-info-card"><div class="org-info-lbl">'+c.l+'</div><div class="org-info-val">'+c.v+'</div></div>';
     }).join('');
+    grid.className = 'org-info-grid';
   }
   const hbox = document.getElementById('orgHeadline');
   if(hbox && d.headline?.plaintext){
-    hbox.textContent = d.headline.plaintext.trim();
+    hbox.textContent = decode(d.headline.plaintext.trim());
     hbox.style.display='block';
+    hbox.className='org-headline';
   }
 }
 
