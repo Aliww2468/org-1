@@ -344,6 +344,55 @@ footer{
   /* Hamburger */
 
 
+
+  /* Member grid */
+  .member-grid-rsi{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.6rem;}
+  .member-card-rsi{background:#0d1c30;border:1px solid rgba(74,179,232,0.15);display:flex;align-items:center;gap:0;overflow:hidden;transition:border-color 0.2s,background 0.2s;position:relative;}
+  .member-card-rsi::before,.member-card-rsi::after{content:'';position:absolute;width:8px;height:8px;border-color:rgba(74,179,232,0.3);border-style:solid;}
+  .member-card-rsi::before{top:4px;left:4px;border-width:1px 0 0 1px;}
+  .member-card-rsi::after{bottom:4px;right:4px;border-width:0 1px 1px 0;}
+  .member-card-rsi:hover{border-color:rgba(74,179,232,0.45);background:#0f2035;}
+  .m-avatar-rsi{width:72px;height:72px;object-fit:cover;object-position:top center;display:block;flex-shrink:0;}
+  .m-avatar-ph-rsi{width:72px;height:72px;background:rgba(74,179,232,0.06);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--blue-bright);flex-shrink:0;}
+  .member-card-rsi .m-info{flex:1;padding:0.5rem 0.75rem;min-width:0;border-left:1px solid rgba(74,179,232,0.1);}
+  .member-card-rsi .m-handle-rsi{font-size:12px;font-weight:700;color:#e8f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;font-family:'Orbitron',monospace;}
+  .member-card-rsi .m-moniker{font-size:10px;color:rgba(74,179,232,0.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;letter-spacing:0.5px;}
+  .member-card-rsi .m-stars-rsi{font-size:10px;color:#c8a040;letter-spacing:2px;margin-bottom:2px;}
+  .member-card-rsi .m-rank-rsi{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(74,179,232,0.5);}
+
+
+  /* Pagination */
+  .pg-btn, .pg-btn-rsi{
+    background:transparent;
+    border:1px solid rgba(74,179,232,0.2);
+    color:#7090a8;
+    font-size:11px;
+    padding:5px 11px;
+    cursor:pointer;
+    transition:all 0.2s;
+    font-family:'Orbitron',monospace;
+    letter-spacing:1px;
+  }
+  .pg-btn:hover, .pg-btn-rsi:hover{border-color:rgba(74,179,232,0.5);color:#4ab3e8;}
+  .pg-btn.active{border-color:#4ab3e8;color:#4ab3e8;background:rgba(74,179,232,0.08);}
+  .pg-btn:disabled, .pg-btn-rsi:disabled{opacity:0.3;cursor:default;}
+
+
+  /* Website cards */
+  .website-grid-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem;}
+  .website-card{display:flex;flex-direction:column;align-items:center;text-align:center;background:#0d1c30;border:1px solid rgba(74,179,232,0.15);padding:1.5rem 1rem;text-decoration:none;transition:border-color 0.2s,background 0.2s;cursor:pointer;position:relative;}
+  .website-card:hover{border-color:rgba(74,179,232,0.45);background:#0f2035;}
+  .website-card::before,.website-card::after{content:'';position:absolute;width:8px;height:8px;border-color:rgba(74,179,232,0.25);border-style:solid;}
+  .website-card::before{top:4px;left:4px;border-width:1px 0 0 1px;}
+  .website-card::after{bottom:4px;right:4px;border-width:0 1px 1px 0;}
+  .website-icon{width:48px;height:48px;border-radius:4px;background:rgba(74,179,232,0.06);border:1px solid rgba(74,179,232,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:0.75rem;overflow:hidden;flex-shrink:0;}
+  .website-icon img{width:100%;height:100%;object-fit:contain;}
+  .website-name{font-size:12px;font-weight:700;color:#e8f4ff;margin-bottom:4px;font-family:'Orbitron',monospace;}
+  .website-desc{font-size:11px;color:#7090a8;line-height:1.6;margin-bottom:6px;}
+  .website-url{font-size:9px;letter-spacing:1px;color:rgba(74,179,232,0.5);}
+  .website-arrow{font-size:12px;color:rgba(74,179,232,0.3);margin-top:0.5rem;transition:color 0.2s;}
+  .website-card:hover .website-arrow{color:#4ab3e8;}
+
 </style>
 </head>
 <body>
@@ -365,7 +414,7 @@ footer{
   .dot-breathing{animation:breathe 2s ease-in-out infinite;}
 </style>
 
-<div class="top-bar">ROBERTS SPACE INDUSTRIES®</div>
+<div class="top-bar">华夏舰队 · 非官方粉丝组织页面</div>
 
 <!-- Nav -->
 <nav>
@@ -489,43 +538,6 @@ footer{
 </div>
 
 <!-- Footer -->
-<footer>
-  <div class="footer-main">
-    <div class="footer-brand">
-      <div class="footer-logo" id="footerName">华夏舰队</div>
-      <div class="footer-tagline">Star Citizen 华人精英组织 · 守华夏之魂，拓星海之土</div>
-    </div>
-    <div>
-      <div class="footer-col-title">导航</div>
-      <div class="footer-links">
-        <a onclick="showMainPage('home')" style="cursor:pointer;">首页</a>
-        <a onclick="showMainPage('org')" style="cursor:pointer;">组织详情</a>
-        <a onclick="showMainPage('members')" style="cursor:pointer;">成员名录</a>
-        <a onclick="showMainPage('websites')" style="cursor:pointer;">相关网站</a>
-        <a onclick="showMainPage('join')" style="cursor:pointer;">申请加入</a>
-      </div>
-    </div>
-    <div>
-      <div class="footer-col-title">外部链接</div>
-      <div class="footer-links">
-        <a id="rsiBtn" href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank">RSI 官方页面</a>
-        <a href="https://www.erkul.games" target="_blank">Erkul DPS</a>
-        <a href="https://uexcorp.space" target="_blank">UEX Corp</a>
-      </div>
-    </div>
-    <div class="footer-cta-col">
-      <div class="footer-col-title">立即加入</div>
-      <a class="hero-btn" id="joinBtn" href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank" style="font-size:12px;padding:10px 20px;">› RSI 申请</a>
-      <a class="hero-btn" href="https://qm.qq.com/q/8wCNiHactG" target="_blank" style="font-size:12px;padding:10px 20px;background:transparent;border:1px solid var(--border);">加入 QQ 群</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>数据来源：starcitizen-api.com & robertsspaceindustries.com · 华夏舰队非官方页面</span>
-    <div class="footer-bottom-links">
-      <a href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank">RSI 官方</a>
-    </div>
-  </div>
-</footer>
 </div><!-- end page-home -->
 
 <!-- ═══════ PAGE: ORG ═══════ -->
@@ -545,11 +557,6 @@ footer{
     <p style="font-weight:600;color:#e8f4ff;">纪元2960·传承：薪火不灭，星海永续</p>
   </div>
 </div>
-<footer style="margin-top:auto;">
-  <div class="footer-bottom" style="padding:1rem 3rem;">
-    <span>← <a onclick="showMainPage('home')" style="cursor:pointer;color:var(--blue-bright);">返回首页</a></span>
-  </div>
-</footer>
 </div><!-- end page-org -->
 
 <!-- ═══════ PAGE: MEMBERS ═══════ -->
@@ -587,7 +594,7 @@ footer{
 <div id="page-websites" class="rsi-page" style="display:none;">
 <div class="section">
   <div class="sec-hd"><div class="sec-line"></div><div class="sec-label">相关网站</div><div class="sec-line"></div></div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;">
+  <div class="website-grid-wrap">
     <a class="website-card" href="https://www.erkul.games/live/calculator" target="_blank">
       <div class="website-icon"><img src="https://www.erkul.games/favicon.ico" onerror="this.outerHTML='🎯'"></div>
       <div class="website-info"><div class="website-name">Erkul DPS</div><div class="website-desc">武器 DPS 查询工具</div><div class="website-url">erkul.games</div></div>
@@ -652,6 +659,47 @@ footer{
   </div>
 </div>
 </div><!-- end page-join -->
+
+<footer>
+  <div class="footer-main">
+    <div class="footer-brand">
+      <div class="footer-logo" id="footerName">华夏舰队</div>
+      <div class="footer-tagline">Star Citizen 华人精英组织 · 守华夏之魂，拓星海之土</div>
+    </div>
+    <div>
+      <div class="footer-col-title">导航</div>
+      <div class="footer-links">
+        <a onclick="showMainPage('home')" style="cursor:pointer;">首页</a>
+        <a onclick="showMainPage('org')" style="cursor:pointer;">组织详情</a>
+        <a onclick="showMainPage('members')" style="cursor:pointer;">成员名录</a>
+        <a onclick="showMainPage('websites')" style="cursor:pointer;">相关网站</a>
+        <a onclick="showMainPage('join')" style="cursor:pointer;">申请加入</a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">外部链接</div>
+      <div class="footer-links">
+        <a id="rsiBtn" href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank">RSI 官方页面</a>
+        <a href="https://www.erkul.games" target="_blank">Erkul DPS</a>
+        <a href="https://uexcorp.space" target="_blank">UEX Corp</a>
+      </div>
+    </div>
+    <div class="footer-cta-col">
+      <div class="footer-col-title">立即加入</div>
+      <a class="hero-btn" id="joinBtn" href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank" style="font-size:12px;padding:10px 20px;">› RSI 申请</a>
+      <a class="hero-btn" href="https://qm.qq.com/q/8wCNiHactG" target="_blank" style="font-size:12px;padding:10px 20px;background:transparent;border:1px solid var(--border);">加入 QQ 群</a>
+    </div>
+  </div>
+  <div style="border-top:1px solid var(--border);padding:1rem 3rem;font-size:10px;color:var(--text3);text-align:center;line-height:1.8;">
+    本网站为非官方玩家粉丝网站，与 Cloud Imperium Games 或 Roberts Space Industries 集团公司没有任何关联，亦未获得其认可。游戏内容及素材版权归 Cloud Imperium Rights LLC 所有。Star Citizen® 和 Roberts Space Industries® 均为 Cloud Imperium Rights LLC 的注册商标。数据来源：starcitizen-api.com
+  </div>
+  <div class="footer-bottom">
+    <span>华夏舰队 · 非官方粉丝组织页面</span>
+    <div class="footer-bottom-links">
+      <a href="https://robertsspaceindustries.com/en/orgs/11111111" target="_blank"></a>
+    </div>
+  </div>
+</footer>
 
 <script>
 window.onerror = function(msg, src, line, col, err){
@@ -981,10 +1029,15 @@ function applyFilter(){
         <div class="m-rank">—</div>
       </div>`;
     }
+    const stars = '★'.repeat(m.stars||0) + '☆'.repeat(5-(m.stars||0));
     return `<div class="member-card-rsi">
       ${av}
-      <div class="m-handle-rsi">${m.handle||'Unknown'}</div>
-      <div class="m-rank-rsi">${m.rank||'Member'}</div>
+      <div class="m-info">
+        <div class="m-handle-rsi">${m.handle||'Unknown'}</div>
+        <div class="m-moniker">${m.moniker||m.handle||''}</div>
+        <div class="m-stars-rsi">${stars}</div>
+        <div class="m-rank-rsi">${m.rank||'Member'}</div>
+      </div>
     </div>`;
   }).join('')}</div>`;
 
@@ -1016,7 +1069,7 @@ function buildPagi(page, totalPages){
 function goPage(p){
   viewPage = p;
   applyFilter();
-  document.getElementById('members').scrollIntoView({behavior:'smooth'});
+  const ms=document.getElementById('page-members'); if(ms) ms.scrollIntoView({behavior:'smooth'});
 }
 
 
