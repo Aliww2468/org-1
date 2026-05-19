@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>华夏舰队 · RSI 风格预览</title>
+<title>华夏舰队</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;600&family=ZCOOL+XiaoWei&display=swap');
 
@@ -412,6 +412,25 @@ footer{
   /* Banner */
   .org-banner{width:100%;max-height:240px;object-fit:cover;display:block;}
 
+
+  /* Announcements */
+  .announce-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0.75rem;}
+  .announce-card{background:#0d1c30;border:1px solid rgba(74,179,232,0.12);padding:0;overflow:hidden;cursor:pointer;transition:border-color 0.2s,transform 0.2s;position:relative;}
+  .announce-card:hover{border-color:rgba(74,179,232,0.4);transform:translateY(-2px);}
+  .announce-card-header{padding:1rem 1.25rem 0.75rem;border-bottom:1px solid rgba(74,179,232,0.07);}
+  .announce-card-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+  .announce-card-date{font-size:9px;letter-spacing:2px;color:rgba(74,179,232,0.4);font-family:'Orbitron',monospace;}
+  .announce-card-tags{display:flex;gap:4px;flex-wrap:wrap;}
+  .announce-tag{font-size:9px;letter-spacing:1px;padding:2px 8px;border:1px solid rgba(74,179,232,0.2);color:rgba(74,179,232,0.6);text-transform:uppercase;}
+  .announce-card-title{font-size:14px;font-weight:700;color:#e8f4ff;line-height:1.4;font-family:system-ui,sans-serif;}
+  .announce-card-body{padding:0.75rem 1.25rem 1rem;font-size:12px;color:#5a7a8a;line-height:1.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .announce-card-footer{padding:0 1.25rem 0.75rem;display:flex;align-items:center;justify-content:flex-end;}
+  .announce-card-more{font-size:9px;letter-spacing:2px;color:rgba(74,179,232,0.4);text-transform:uppercase;transition:color 0.2s;}
+  .announce-card:hover .announce-card-more{color:#4ab3e8;}
+  .announce-card-accent{position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,#4ab3e8,rgba(74,179,232,0));}
+  .announce-empty{color:#4a6070;font-size:13px;text-align:center;padding:2rem;}
+
+  #loadScreen.out{opacity:0;pointer-events:none;}
 </style>
 </head>
 <body>
@@ -516,13 +535,20 @@ footer{
 </div>
 
 <!-- 公告栏 -->
-<div style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:1.5rem 3rem;">
+<div style="padding:3rem 3rem 2rem;background:var(--bg2);border-top:1px solid rgba(74,179,232,0.1);border-bottom:1px solid rgba(74,179,232,0.1);">
   <div style="max-width:1300px;margin:0 auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-      <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--blue-bright);">公告栏</div>
-      <div style="font-size:11px;color:var(--text2);" id="announceCount"></div>
+    <div class="sec-hd" style="margin-bottom:1.5rem;">
+      <div class="sec-line"></div>
+      <div class="sec-label" style="display:flex;align-items:center;gap:0.75rem;">
+        <span>最新公告</span>
+        <span id="announceCount" style="font-size:9px;color:rgba(74,179,232,0.5);letter-spacing:1px;font-family:sans-serif;"></span>
+      </div>
+      <div class="sec-line"></div>
     </div>
-    <div id="announceList" style="font-size:13px;color:var(--text2);">加载中...</div>
+    <div id="announceList"><div style="color:#4a6070;font-size:13px;text-align:center;padding:2rem;">加载中...</div></div>
+    <div style="text-align:center;margin-top:1.25rem;">
+      <a onclick="openAllAnnouncements()" style="font-size:10px;letter-spacing:2px;color:rgba(74,179,232,0.4);text-decoration:none;text-transform:uppercase;transition:color 0.2s;cursor:pointer;" onmouseover="this.style.color='#4ab3e8'" onmouseout="this.style.color='rgba(74,179,232,0.4)'">查看全部公告 →</a>
+    </div>
   </div>
 </div>
 
@@ -1119,6 +1145,49 @@ function goPage(p){
 
 
 
+
+
+function openAllAnnouncements(){
+  var data = window._announceData || [];
+  if(!data.length){
+    alert('暂无公告数据，请稍后再试');
+    return;
+  }
+  document.getElementById('allAnnounceList').innerHTML = data.map(function(a, i){
+    const short = a.body.length > 80 ? a.body.slice(0,80)+'…' : a.body;
+    var el = document.createElement('div');
+    el.style.cssText = 'border-bottom:1px solid rgba(74,179,232,0.08);padding:1.25rem 0;cursor:pointer;transition:background 0.2s;';
+    el.onmouseover = function(){ this.style.background='rgba(74,179,232,0.04)'; };
+    el.onmouseout  = function(){ this.style.background='transparent'; };
+    el.onclick = (function(idx){ return function(){ openAnnounceModal(idx); document.getElementById('allAnnounceModal').style.display='none'; }; })(i);
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">'
+      +'<div style="font-size:14px;font-weight:700;color:#e8f4ff;">'+a.title+'</div>'
+      +'<div style="font-size:9px;letter-spacing:2px;color:rgba(74,179,232,0.4);font-family:Orbitron,monospace;flex-shrink:0;margin-left:1rem;">'+a.date+'</div>'
+      +'</div>'
+      +(short?'<div style="font-size:12px;color:#5a7a8a;line-height:1.7;">'+short+'</div>':'');
+    return el.outerHTML;
+  }).join('');
+  document.getElementById('allAnnounceModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function openAnnounceModal(i){
+  var a = (window._announceData||[])[i];
+  if(!a) return;
+  document.getElementById('modalTitle').textContent = a.title;
+  document.getElementById('modalDate').textContent = a.date;
+  document.getElementById('modalBody').textContent = a.body;
+  document.getElementById('modalTags').innerHTML = a.tags;
+  var m = document.getElementById('announceModal');
+  m.style.display = 'flex';
+}
+function closeAnnounceModal(e){
+  if(!e || e.target === document.getElementById('announceModal')){
+    document.getElementById('announceModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
 async function fetchNavStatus(){
   const ver = document.getElementById('navVersion');
   if(ver) ver.textContent = 'LiVE 4.8.0';
@@ -1183,24 +1252,35 @@ async function fetchAnnouncements(){
       return;
     }
 
-    cnt.textContent = issues.length + ' 条';
-    el.innerHTML = issues.map((issue, i) => {
-      const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
-      const body = (issue.body || '').replace(/\r\n/g,'\n').trim();
-      const short = body.length > 100 ? body.slice(0,100)+'…' : body;
-      const labels = issue.labels
-        .filter(l => l.name !== '公告')
-        .map(l => `<span class="announce-label">${l.name}</span>`)
-        .join(' ');
-      return `<div class="announce-card" onclick="toggleAnnounce(this)">
-        ${labels ? `<div>${labels}</div>` : ''}
-        <div class="announce-card-top">
-          <div class="announce-card-title">${issue.title}</div>
-          <div class="announce-card-date">${date}</div>
-        </div>
-        <div class="announce-card-body" data-full="${encodeURIComponent(body)}" data-short="${encodeURIComponent(short)}">${short||'点击展开'}</div>
-      </div>`;
-    }).join('');
+    if(cnt) cnt.textContent = issues.length + ' 条';
+
+    // Store data globally for modal access
+    window._announceData = issues.map(function(issue){
+      return {
+        title: issue.title,
+        date: new Date(issue.created_at).toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'}),
+        body: (issue.body||'').replace(/\r\n/g,'\n').trim(),
+        tags: issue.labels.filter(function(l){return l.name!=='公告';})
+              .map(function(l){return '<span class="announce-tag">'+l.name+'</span>';}).join('')
+      };
+    });
+
+    el.innerHTML = '<div class="announce-grid">' +
+      window._announceData.slice(0,4).map(function(a, i){
+        const short = a.body.length > 100 ? a.body.slice(0,100)+'…' : a.body;
+        return '<div class="announce-card" onclick="openAnnounceModal('+i+')">'
+          +'<div class="announce-card-accent"></div>'
+          +'<div class="announce-card-header">'
+          +'<div class="announce-card-meta">'
+          +'<div class="announce-card-date">'+a.date+'</div>'
+          +(a.tags?'<div class="announce-card-tags">'+a.tags+'</div>':'')
+          +'</div>'
+          +'<div class="announce-card-title">'+a.title+'</div>'
+          +'</div>'
+          +(short?'<div class="announce-card-body">'+short+'</div>':'')
+          +'<div class="announce-card-footer"><span class="announce-card-more">查看详情 →</span></div>'
+          +'</div>';
+      }).join('') + '</div>';
   } catch(e){
     (document.getElementById('announceList')||{}).innerHTML =
       '<div class="announce-empty">公告加载失败</div>';
@@ -1423,5 +1503,37 @@ function renderOrgPage(){
   layout(false);
 })();
 </script>
+
+<!-- Announcement Modal -->
+<div id="announceModal" onclick="closeAnnounceModal(event)" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(6,15,26,0.92);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:2rem;">
+  <div style="background:#0d1c30;border:1px solid rgba(74,179,232,0.2);max-width:680px;width:100%;max-height:85vh;overflow-y:auto;position:relative;" onclick="event.stopPropagation()">
+    <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,#4ab3e8,transparent);"></div>
+    <!-- Header -->
+    <div style="padding:1.5rem 2rem 1rem;border-bottom:1px solid rgba(74,179,232,0.1);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+      <div style="flex:1;">
+        <div id="modalDate" style="font-size:9px;letter-spacing:3px;color:rgba(74,179,232,0.5);font-family:'Orbitron',monospace;margin-bottom:0.5rem;"></div>
+        <div id="modalTags" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:0.75rem;"></div>
+        <div id="modalTitle" style="font-size:18px;font-weight:700;color:#e8f4ff;line-height:1.4;"></div>
+      </div>
+      <button onclick="document.getElementById('announceModal').style.display='none'" style="background:transparent;border:1px solid rgba(74,179,232,0.2);color:#7090a8;font-size:16px;width:32px;height:32px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.borderColor='#4ab3e8';this.style.color='#4ab3e8'" onmouseout="this.style.borderColor='rgba(74,179,232,0.2)';this.style.color='#7090a8'">✕</button>
+    </div>
+    <!-- Body -->
+    <div id="modalBody" style="padding:1.5rem 2rem;font-size:13px;color:#7090a8;line-height:2;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;"></div>
+  </div>
+</div>
+
+
+<!-- All Announcements Modal -->
+<div id="allAnnounceModal" onclick="if(event.target===this){this.style.display='none';document.body.style.overflow='';}" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(6,15,26,0.92);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;padding:2rem;overflow-y:auto;">
+  <div style="background:#0d1c30;border:1px solid rgba(74,179,232,0.2);max-width:780px;width:100%;position:relative;margin:auto;" onclick="event.stopPropagation()">
+    <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,#4ab3e8,transparent);"></div>
+    <div style="padding:1.5rem 2rem;border-bottom:1px solid rgba(74,179,232,0.1);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Orbitron',monospace;font-size:12px;letter-spacing:3px;color:#4ab3e8;">全部公告</div>
+      <button onclick="document.getElementById('allAnnounceModal').style.display='none';document.body.style.overflow='';" style="background:transparent;border:1px solid rgba(74,179,232,0.2);color:#7090a8;font-size:16px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.borderColor='#4ab3e8';this.style.color='#4ab3e8'" onmouseout="this.style.borderColor='rgba(74,179,232,0.2)';this.style.color='#7090a8'">✕</button>
+    </div>
+    <div id="allAnnounceList" style="padding:1rem 2rem 2rem;"></div>
+  </div>
+</div>
+
 </body>
 </html>
